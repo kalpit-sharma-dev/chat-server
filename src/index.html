@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+</head>
+<body>
+    <input type="text" id="username" placeholder="Enter your username">
+    <button onclick="login()">Login</button>
+    <div id="chat" style="display: none;">
+        <input type="text" id="room" placeholder="Enter room">
+        <button onclick="joinRoom()">Join Room</button>
+        <div id="messages"></div>
+        <input type="text" id="message" placeholder="Enter message">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <script>
+        let ws;
+        let token;
+
+        function login() {
+            const username = document.getElementById('username').value;
+            fetch(`/login?username=${username}`)
+                .then(response => response.text())
+                .then(data => {
+                    token = data;
+                    document.getElementById('chat').style.display = 'block';
+                });
+        }
+
+        function joinRoom() {
+            const room = document.getElementById('room').value;
+            ws = new WebSocket(`ws://localhost:9999/ws?token=${token}`);
+            ws.onmessage = function(event) {
+                const message = document.createElement('div');
+                message.textContent = event.data;
+                document.getElementById('messages').appendChild(message);
+            };
+        }
+
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            ws.send(JSON.stringify({ content: message }));
+            document.getElementById('message').value = '';
+        }
+    </script>
+</body>
+</html>
