@@ -16,8 +16,9 @@ func NewMessageRepository(db *sqlx.DB) *MessageRepository {
 }
 
 func (repo *MessageRepository) SaveMessage(message *models.Message) error {
-	query := `INSERT INTO messages (sender, receiver, content, timestamp) VALUES (?, ?, ?, ?)`
-	_, err := repo.db.Exec(query, message.Sender, message.Receiver, message.Content, message.Timestamp)
+	query := `INSERT INTO messages (id, sender, receiver, content, timestamp, is_forwarded, original_sender, original_message_id, is_edited, is_deleted)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	_, err := repo.db.Exec(query, message.ID, message.Sender, message.Receiver, message.Content, message.Timestamp, message.IsForwarded, message.OriginalSender, message.OriginalMessageID, message.IsEdited, message.IsDeleted)
 	return err
 }
 
@@ -35,6 +36,33 @@ func (repo *MessageRepository) GetMessageByID(id string) (models.Message, error)
 		FROM messages WHERE id = ?`, id)
 
 	err := row.Scan(&message.ID, &message.Sender, &message.Receiver, &message.Content, &message.Timestamp, &message.IsForwarded, &message.OriginalSender, &message.OriginalMessageID)
+	if err == sql.ErrNoRows {
+		return message, nil // No error, but no record found
+	} else if err != nil {
+		return message, err
+	}
+	return message, nil
+}
+
+// UpdateMessageContent updates the content of a message and sets it as edited
+func (repo *messageRepository) UpdateMessageContent(id, content string) error {
+	_, err := repo.db.Exec(`UPDATE messages SET content = ?, is_edited = 1 WHERE id = ?`, content, id)
+	return err
+}
+
+// DeleteMessage marks a message as deleted
+func (repo *messageRepository) DeleteMessage(id string) error {
+	_, err := repo.db.Exec(`UPDATE messages SET is_deleted = 1 WHERE id = ?`, id)
+	return err
+}
+
+// GetMessageByID retrieves a message by ID from the database
+func (repo *messageRepository) GetMessageByID(id string) (model.Message, error) {
+	var message model.Message
+	row := repo.db.QueryRow(`SELECT id, sender, receiver, content, timestamp, is_forwarded, original_sender, original_message_id, is_edited, is_deleted
+		FROM messages WHERE id = ?`, id)
+
+	err := row.Scan(&message.ID, &message.Sender, &message.Receiver, &message.Content, &message.Timestamp, &message.IsForwarded, &message.OriginalSender, &message.OriginalMessageID, &message.IsEdited, &message.IsDeleted)
 	if err == sql.ErrNoRows {
 		return message, nil // No error, but no record found
 	} else if err != nil {

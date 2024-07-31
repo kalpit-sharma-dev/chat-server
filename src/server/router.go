@@ -85,6 +85,9 @@ func registerAppRoutes(r *mux.Router) {
 
 	r.HandleFunc("/upload_media", chatController.UploadMedia).Methods("POST")
 
+	r.HandleFunc("/messages/edit", chatController.EditMessageHandler(chatService)).Methods("POST")
+	r.HandleFunc("/messages/delete", chatController.DeleteMessageHandler(chatService)).Methods("POST")
+
 	//r.HandleFunc("/login", chatHandlers.Login).Methods(http.MethodPost)
 
 	//r.HandleFunc("/register", chatHandlers.RegisterUser).Methods(http.MethodGet) //quer param color,number

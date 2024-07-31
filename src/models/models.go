@@ -34,6 +34,8 @@ type Message struct {
 	IsForwarded       bool   `json:"is_forwarded"`                  // Indicates if the message is forwarded
 	OriginalSender    string `json:"original_sender,omitempty"`     // Original sender if forwarded
 	OriginalMessageID string `json:"original_message_id,omitempty"` // ID of the original message if forwarded
+	IsEdited          bool   `json:"is_edited"`
+	IsDeleted         bool   `json:"is_deleted"`
 }
 
 // Reaction represents a reaction to a message
@@ -112,4 +114,15 @@ type AddReactionRequest struct {
 	MessageID string `json:"message_id"`
 	User      string `json:"user"`
 	Emoji     string `json:"emoji"`
+}
+
+// EditMessageRequest represents the request body for editing a message
+type EditMessageRequest struct {
+	MessageID  string `json:"message_id"`
+	NewContent string `json:"new_content"`
+}
+
+// DeleteMessageRequest represents the request body for deleting a message
+type DeleteMessageRequest struct {
+	MessageID string `json:"message_id"`
 }

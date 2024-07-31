@@ -15,15 +15,16 @@ func InitDB() *sqlx.DB {
 
 	schema := `
 	CREATE TABLE IF NOT EXISTS messages (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id TEXT PRIMARY KEY,
 		sender TEXT,
 		receiver TEXT,
 		content TEXT,
 		timestamp TEXT,
 		is_forwarded BOOLEAN,
 		original_sender TEXT,
-		original_message_id TEXT
-
+		original_message_id TEXT,
+		is_edited BOOLEAN DEFAULT 0,
+		is_deleted BOOLEAN DEFAULT 0
 	);
 	CREATE TABLE IF NOT EXISTS groups (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,13 +57,13 @@ func InitDB() *sqlx.DB {
 	}
 	// Create reactions table if it doesn't exist
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS reactions (
-	id TEXT PRIMARY KEY,
-	message_id TEXT,
-	user TEXT,
-	emoji TEXT,
-	timestamp TEXT,
-	FOREIGN KEY(message_id) REFERENCES messages(id)
-)`)
+		id TEXT PRIMARY KEY,
+		message_id TEXT,
+		user TEXT,
+		emoji TEXT,
+		timestamp TEXT,
+		FOREIGN KEY(message_id) REFERENCES messages(id)
+	)`)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -166,3 +166,41 @@ func (controller *ChatController) AddReactionHandler(chatService *service.ChatSe
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+// EditMessageHandler handles editing a message
+func (controller *ChatController) EditMessageHandler(chatService *service.ChatService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req models.EditMessageRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err := chatService.EditMessage(req.MessageID, req.NewContent)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// DeleteMessageHandler handles deleting a message
+func (controller *ChatController) DeleteMessageHandler(chatService *service.ChatService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req models.DeleteMessageRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err := chatService.DeleteMessage(req.MessageID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}

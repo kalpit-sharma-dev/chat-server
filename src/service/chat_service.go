@@ -180,3 +180,41 @@ func (service *ChatService) AddReaction(messageID, user, emoji string) error {
 
 	return nil
 }
+
+// EditMessage edits the content of a message
+func (service *ChatService) EditMessage(messageID, newContent string) error {
+	// Update the message content
+	if err := service.messageRepo.UpdateMessageContent(messageID, newContent); err != nil {
+		return err
+	}
+
+	// Notify the receiver about the edited message
+	message, err := service.messageRepo.GetMessageByID(messageID)
+	if err != nil {
+		return err
+	}
+	if client := service.GetClient(message.Receiver); client != nil {
+		client.WriteJSON(message)
+	}
+
+	return nil
+}
+
+// DeleteMessage marks a message as deleted
+func (service *ChatService) DeleteMessage(messageID string) error {
+	// Mark the message as deleted
+	if err := service.messageRepo.DeleteMessage(messageID); err != nil {
+		return err
+	}
+
+	// Notify the receiver about the deleted message
+	message, err := service.messageRepo.GetMessageByID(messageID)
+	if err != nil {
+		return err
+	}
+	if client := service.GetClient(message.Receiver); client != nil {
+		client.WriteJSON(message)
+	}
+
+	return nil
+}
