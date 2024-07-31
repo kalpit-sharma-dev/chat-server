@@ -54,6 +54,17 @@ func InitDB() *sqlx.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	// Create reactions table if it doesn't exist
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS reactions (
+	id TEXT PRIMARY KEY,
+	message_id TEXT,
+	user TEXT,
+	emoji TEXT,
+	timestamp TEXT,
+	FOREIGN KEY(message_id) REFERENCES messages(id)
+)`)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return db
 }

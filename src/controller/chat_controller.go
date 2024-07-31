@@ -147,3 +147,22 @@ func (controller *ChatController) UploadMedia(w http.ResponseWriter, r *http.Req
 
 	utils.RespondJSON(w, http.StatusCreated, media)
 }
+
+// AddReactionHandler handles the addition of reactions to messages
+func (controller *ChatController) AddReactionHandler(chatService *service.ChatService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req models.AddReactionRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err := chatService.AddReaction(req.MessageID, req.User, req.Emoji)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}

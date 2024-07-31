@@ -23,9 +23,10 @@ type ChatService struct {
 	messageRepo    *repository.MessageRepository
 	groupRepo      *repository.GroupRepository
 	mu             sync.RWMutex
+	reactionRepo   repository.ReactionRepository
 }
 
-func NewChatService(messageRepo *repository.MessageRepository, groupRepo *repository.GroupRepository) *ChatService {
+func NewChatService(messageRepo *repository.MessageRepository, groupRepo *repository.GroupRepository, reactionRepo repository.ReactionRepository) *ChatService {
 	return &ChatService{
 		clients:        make(map[string]*Client),
 		groupClients:   make(map[int64][]*Client),
@@ -33,6 +34,7 @@ func NewChatService(messageRepo *repository.MessageRepository, groupRepo *reposi
 		groupBroadcast: make(chan models.GroupMessage),
 		messageRepo:    messageRepo,
 		groupRepo:      groupRepo,
+		reactionRepo:   reactionRepo,
 	}
 }
 
@@ -150,4 +152,31 @@ func (service *ChatService) ForwardMessage(originalMessageID, newReceiver string
 // generateNewID generates a new unique identifier for messages
 func generateNewID() string {
 	return uuid.NewString()
+}
+
+// AddReaction adds a reaction to a message
+func (service *ChatService) AddReaction(messageID, user, emoji string) error {
+	reaction := models.Reaction{
+		ID:        generateNewID(),
+		MessageID: messageID,
+		User:      user,
+		Emoji:     emoji,
+		Timestamp: time.Now().Format(time.RFC3339),
+	}
+
+	// Save the reaction
+	if err := service.reactionRepo.Save(reaction); err != nil {
+		return err
+	}
+
+	// Broadcast the reaction to the message's receiver
+	message, err := service.messageRepo.GetMessageByID(messageID)
+	if err != nil {
+		return err
+	}
+	if client := service.GetClient(message.Receiver); client != nil {
+		client.WriteJSON(reaction)
+	}
+
+	return nil
 }

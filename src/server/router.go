@@ -64,7 +64,8 @@ func registerAppRoutes(r *mux.Router) {
 	messageRepo := repository.NewMessageRepository(db)
 	groupRepo := repository.NewGroupRepository(db)
 	mediaRepo := repository.NewMediaRepository(db)
-	chatService := service.NewChatService(messageRepo, groupRepo)
+	reactionRepo := repository.NewReactionRepository(db)
+	chatService := service.NewChatService(messageRepo, groupRepo, reactionRepo)
 	awsSession := session.Must(session.NewSession())
 	s3Client := s3.New(awsSession)
 	mediaService := service.NewMediaService(mediaRepo, s3Client, "your-s3-bucket-name")
@@ -80,6 +81,7 @@ func registerAppRoutes(r *mux.Router) {
 
 	r.HandleFunc("/groups", chatController.CreateGroup).Methods("POST")
 	r.HandleFunc("/group_messages", chatController.GetGroupMessages).Methods("GET")
+	r.HandleFunc("/reactions", chatController.AddReactionHandler(chatService)).Methods("POST")
 
 	r.HandleFunc("/upload_media", chatController.UploadMedia).Methods("POST")
 

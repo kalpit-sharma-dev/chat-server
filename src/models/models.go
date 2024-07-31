@@ -36,6 +36,15 @@ type Message struct {
 	OriginalMessageID string `json:"original_message_id,omitempty"` // ID of the original message if forwarded
 }
 
+// Reaction represents a reaction to a message
+type Reaction struct {
+	ID        string `json:"id"`
+	MessageID string `json:"message_id"`
+	User      string `json:"user"`
+	Emoji     string `json:"emoji"`
+	Timestamp string `json:"timestamp"`
+}
+
 type Client struct {
 	Username string
 	Conn     *websocket.Conn
@@ -97,4 +106,10 @@ type Media struct {
 	URL       string `json:"url"`
 	Type      string `json:"type"` // e.g., image, video, document
 	MessageID int64  `json:"message_id"`
+}
+
+type AddReactionRequest struct {
+	MessageID string `json:"message_id"`
+	User      string `json:"user"`
+	Emoji     string `json:"emoji"`
 }
