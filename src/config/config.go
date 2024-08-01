@@ -63,7 +63,27 @@ func InitDB() *sqlx.DB {
 		emoji TEXT,
 		timestamp TEXT,
 		FOREIGN KEY(message_id) REFERENCES messages(id)
-	)`)
+	);
+	
+	CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    phone_number TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS chats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    is_group BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS chat_members (
+    chat_id INTEGER,
+    user_id INTEGER,
+    FOREIGN KEY (chat_id) REFERENCES chats (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+	`)
 	if err != nil {
 		log.Fatal(err)
 	}

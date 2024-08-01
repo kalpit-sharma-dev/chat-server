@@ -32,8 +32,8 @@ func (repo *MessageRepository) GetMessages(sender, receiver string) ([]models.Me
 // GetMessageByID retrieves a message by ID from the database
 func (repo *MessageRepository) GetMessageByID(id string) (models.Message, error) {
 	var message models.Message
-	row := repo.db.QueryRow(`SELECT id, sender, receiver, content, timestamp, is_forwarded, original_sender, original_message_id
-		FROM messages WHERE id = ?`, id)
+	row := repo.db.QueryRow(`SELECT id, sender, receiver, content, timestamp, is_forwarded, original_sender, original_message_id, is_edited, is_deleted
+	FROM messages WHERE id = ?`, id)
 
 	err := row.Scan(&message.ID, &message.Sender, &message.Receiver, &message.Content, &message.Timestamp, &message.IsForwarded, &message.OriginalSender, &message.OriginalMessageID)
 	if err == sql.ErrNoRows {
@@ -45,28 +45,13 @@ func (repo *MessageRepository) GetMessageByID(id string) (models.Message, error)
 }
 
 // UpdateMessageContent updates the content of a message and sets it as edited
-func (repo *messageRepository) UpdateMessageContent(id, content string) error {
+func (repo *MessageRepository) UpdateMessageContent(id, content string) error {
 	_, err := repo.db.Exec(`UPDATE messages SET content = ?, is_edited = 1 WHERE id = ?`, content, id)
 	return err
 }
 
 // DeleteMessage marks a message as deleted
-func (repo *messageRepository) DeleteMessage(id string) error {
+func (repo *MessageRepository) DeleteMessage(id string) error {
 	_, err := repo.db.Exec(`UPDATE messages SET is_deleted = 1 WHERE id = ?`, id)
 	return err
-}
-
-// GetMessageByID retrieves a message by ID from the database
-func (repo *messageRepository) GetMessageByID(id string) (model.Message, error) {
-	var message model.Message
-	row := repo.db.QueryRow(`SELECT id, sender, receiver, content, timestamp, is_forwarded, original_sender, original_message_id, is_edited, is_deleted
-		FROM messages WHERE id = ?`, id)
-
-	err := row.Scan(&message.ID, &message.Sender, &message.Receiver, &message.Content, &message.Timestamp, &message.IsForwarded, &message.OriginalSender, &message.OriginalMessageID, &message.IsEdited, &message.IsDeleted)
-	if err == sql.ErrNoRows {
-		return message, nil // No error, but no record found
-	} else if err != nil {
-		return message, err
-	}
-	return message, nil
 }
