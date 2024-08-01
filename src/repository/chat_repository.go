@@ -11,8 +11,8 @@ type ChatRepository struct {
 }
 
 // NewChatRepository creates a new ChatRepository.
-func NewChatRepository(db *sqlx.DB) *ChatRepository {
-	return &ChatRepository{db: db}
+func NewChatRepository(db *sqlx.DB) ChatRepository {
+	return ChatRepository{db: db}
 }
 
 // GetChatsForUser retrieves the list of chats for a given user.

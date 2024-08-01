@@ -67,7 +67,7 @@ func registerAppRoutes(r *mux.Router) {
 	chatRepo := repository.NewChatRepository(db)
 	reactionRepo := repository.NewReactionRepository(db)
 
-	chatService := service.NewChatService(messageRepo, groupRepo, reactionRepo)
+	chatService := service.NewChatService(messageRepo, groupRepo, reactionRepo, chatRepo)
 	awsSession := session.Must(session.NewSession())
 	s3Client := s3.New(awsSession)
 	mediaService := service.NewMediaService(mediaRepo, s3Client, "your-s3-bucket-name")
@@ -89,6 +89,7 @@ func registerAppRoutes(r *mux.Router) {
 
 	r.HandleFunc("/messages/edit", chatController.EditMessageHandler(chatService)).Methods("POST")
 	r.HandleFunc("/messages/delete", chatController.DeleteMessageHandler(chatService)).Methods("POST")
+	r.HandleFunc("/chats", chatController.GetChats).Methods("GET")
 
 	//r.HandleFunc("/login", chatHandlers.Login).Methods(http.MethodPost)
 
