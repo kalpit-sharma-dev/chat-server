@@ -126,3 +126,10 @@ type EditMessageRequest struct {
 type DeleteMessageRequest struct {
 	MessageID string `json:"message_id"`
 }
+
+// Chat represents a chat, which can be either a group chat or a one-on-one chat.
+type Chat struct {
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	IsGroup bool   `json:"is_group"`
+}

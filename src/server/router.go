@@ -64,7 +64,9 @@ func registerAppRoutes(r *mux.Router) {
 	messageRepo := repository.NewMessageRepository(db)
 	groupRepo := repository.NewGroupRepository(db)
 	mediaRepo := repository.NewMediaRepository(db)
+	chatRepo := repository.NewChatRepository(db)
 	reactionRepo := repository.NewReactionRepository(db)
+
 	chatService := service.NewChatService(messageRepo, groupRepo, reactionRepo)
 	awsSession := session.Must(session.NewSession())
 	s3Client := s3.New(awsSession)

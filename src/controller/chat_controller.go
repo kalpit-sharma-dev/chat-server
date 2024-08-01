@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -203,4 +204,28 @@ func (controller *ChatController) DeleteMessageHandler(chatService *service.Chat
 
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+// GetChats retrieves the list of chats for the logged-in user.
+func (controller *ChatController) GetChats(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context()) // Assuming you have a function to get the logged-in user's ID from the context.
+
+	chats, err := controller.ChatService.GetChatsForUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	RespondJSON(w, chats)
+}
+
+// getUserIDFromContext retrieves the user ID from the request context.
+func getUserIDFromContext(ctx context.Context) int {
+	return ctx.Value("userID").(int)
+}
+
+// RespondJSON writes a JSON response.
+func RespondJSON(w http.ResponseWriter, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
 }

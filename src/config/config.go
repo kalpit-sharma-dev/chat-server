@@ -18,13 +18,18 @@ func InitDB() *sqlx.DB {
 		id TEXT PRIMARY KEY,
 		sender TEXT,
 		receiver TEXT,
+		receiver_id INTEGER,
+		chat_id INTEGER,
+		sender_id INTEGER,
 		content TEXT,
 		timestamp TEXT,
 		is_forwarded BOOLEAN,
 		original_sender TEXT,
 		original_message_id TEXT,
 		is_edited BOOLEAN DEFAULT 0,
-		is_deleted BOOLEAN DEFAULT 0
+		is_deleted BOOLEAN DEFAULT 0,
+		FOREIGN KEY (chat_id) REFERENCES chats (id),
+    	FOREIGN KEY (sender_id) REFERENCES users (id)
 	);
 	CREATE TABLE IF NOT EXISTS groups (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,

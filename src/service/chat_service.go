@@ -22,11 +22,12 @@ type ChatService struct {
 	groupBroadcast chan models.GroupMessage
 	messageRepo    *repository.MessageRepository
 	groupRepo      *repository.GroupRepository
+	chatRepo       repository.ChatRepository
 	mu             sync.RWMutex
 	reactionRepo   repository.ReactionRepository
 }
 
-func NewChatService(messageRepo *repository.MessageRepository, groupRepo *repository.GroupRepository, reactionRepo repository.ReactionRepository) *ChatService {
+func NewChatService(messageRepo *repository.MessageRepository, groupRepo *repository.GroupRepository, reactionRepo repository.ReactionRepository, chatRepo repository.ChatRepository) *ChatService {
 	return &ChatService{
 		clients:        make(map[string]*Client),
 		groupClients:   make(map[int64][]*Client),
@@ -35,6 +36,7 @@ func NewChatService(messageRepo *repository.MessageRepository, groupRepo *reposi
 		messageRepo:    messageRepo,
 		groupRepo:      groupRepo,
 		reactionRepo:   reactionRepo,
+		chatRepo:       chatRepo,
 	}
 }
 
@@ -217,4 +219,9 @@ func (service *ChatService) DeleteMessage(messageID string) error {
 	}
 
 	return nil
+}
+
+// GetChatsForUser retrieves the list of chats for a given user.
+func (s *ChatService) GetChatsForUser(userID int) ([]models.Chat, error) {
+	return s.chatRepo.GetChatsForUser(userID)
 }
