@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/kalpit-sharma-dev/chat-service/src/models"
 	"github.com/kalpit-sharma-dev/chat-service/src/service"
 	"github.com/kalpit-sharma-dev/chat-service/src/utils"
 )
@@ -17,9 +18,16 @@ func NewUserController(userService service.IUserService) UserController {
 }
 
 func (controller *UserController) RegisterUser(w http.ResponseWriter, r *http.Request) {
+	var req models.User
 	phone := r.FormValue("phone")
-
-	err := controller.UserService.RegisterUser(phone)
+	userName := r.FormValue("username")
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	req.Email = email
+	req.UserName = userName
+	req.Password = password
+	req.Phone = phone
+	err := controller.UserService.RegisterUser(req, phone)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
 		return

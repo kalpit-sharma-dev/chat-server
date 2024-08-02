@@ -15,7 +15,7 @@ func NewUserRepository(db *sql.DB) IUserRepository {
 }
 
 func (repo *UserRepository) CreateUser(user *models.User) error {
-	_, err := repo.DB.Exec("INSERT INTO users (phone, verification_code) VALUES (?, ?)", user.Phone, user.VerificationCode)
+	_, err := repo.DB.Exec("INSERT INTO users (user_name,phone_number, verification_code) VALUES (?, ?)", user.UserName, user.Phone, user.VerificationCode)
 	return err
 }
 

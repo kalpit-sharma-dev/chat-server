@@ -83,7 +83,10 @@ func NewHub(db *sql.DB) *Hub {
 
 type User struct {
 	ID               int
+	UserName         string
 	Phone            string
+	Email            string
+	Password         string
 	VerificationCode string
 	Verified         bool
 	CreatedAt        string

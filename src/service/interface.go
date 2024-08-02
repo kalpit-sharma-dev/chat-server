@@ -1,5 +1,7 @@
 package service
 
+import "github.com/kalpit-sharma-dev/chat-service/src/models"
+
 // type ChatService interface {
 // 	RegisterUser()
 // 	Login()
@@ -9,7 +11,7 @@ package service
 // }
 
 type IUserService interface {
-	RegisterUser(phone string) error
+	RegisterUser(user models.User, phone string) error
 	SendVerificationCode(phone string, code string) error
 	GenerateVerificationCode() string
 	VerifyUser(phone string, code string) error

@@ -22,8 +22,9 @@ func NewUserService(userRepo repository.IUserRepository) IUserService {
 }
 
 func (service *UserService) GenerateVerificationCode() string {
-	rand.Seed(time.Now().UnixNano())
-	return fmt.Sprintf("%06d", rand.Intn(1000000))
+	seed := time.Now().UnixNano()
+	r := rand.New(rand.NewSource(seed))
+	return fmt.Sprintf("%06d", r.Intn(1000000))
 }
 
 func (service *UserService) SendVerificationCode(phone string, code string) error {
@@ -38,7 +39,7 @@ func (service *UserService) SendVerificationCode(phone string, code string) erro
 	return err
 }
 
-func (service *UserService) RegisterUser(phone string) error {
+func (service *UserService) RegisterUser(user models.User, phone string) error {
 	existingUser, _ := service.UserRepo.GetUserByPhone(phone)
 	if existingUser != nil {
 		return fmt.Errorf("user already exists")
@@ -46,16 +47,16 @@ func (service *UserService) RegisterUser(phone string) error {
 
 	verificationCode := service.GenerateVerificationCode()
 	err := service.SendVerificationCode(phone, verificationCode)
-	if err != nil {
+	if err == nil {
 		return err
 	}
+	user.VerificationCode = verificationCode
+	// user := &models.User{
+	// 	Phone:            phone,
+	// 	VerificationCode: verificationCode,
+	// }
 
-	user := &models.User{
-		Phone:            phone,
-		VerificationCode: verificationCode,
-	}
-
-	return service.UserRepo.CreateUser(user)
+	return service.UserRepo.CreateUser(&user)
 }
 
 func (service *UserService) VerifyUser(phone string, code string) error {
