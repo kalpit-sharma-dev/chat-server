@@ -15,13 +15,13 @@ func NewUserRepository(db *sql.DB) IUserRepository {
 }
 
 func (repo *UserRepository) CreateUser(user *models.User) error {
-	_, err := repo.DB.Exec("INSERT INTO users (user_name,phone_number, verification_code) VALUES (?, ?)", user.UserName, user.Phone, user.VerificationCode)
+	_, err := repo.DB.Exec("INSERT INTO users (username,phone_number,password_hash, verification_code,verified) VALUES (?,?,?,?,?)", user.UserName, user.Phone, user.Password, user.VerificationCode, true)
 	return err
 }
 
 func (repo *UserRepository) GetUserByPhone(phone string) (*models.User, error) {
 	var user models.User
-	err := repo.DB.QueryRow("SELECT id, phone, verification_code, verified, created_at FROM users WHERE phone=?", phone).Scan(&user.ID, &user.Phone, &user.VerificationCode, &user.Verified, &user.CreatedAt)
+	err := repo.DB.QueryRow("SELECT id,username,phone_number,password_hash,IFNULL(full_name,''),IFNULL(profile_picture_url,''),IFNULL(status_message,''),IFNULL(verification_code,''),IFNULL(verified,0),IFNULL(created_at,''),IFNULL(updated_at,'') FROM users WHERE phone_number=?", phone).Scan(&user.ID, &user.UserName, &user.Phone, &user.Password, &user.FullName, &user.ProfilePictureUrl, &user.StatusMessage, &user.VerificationCode, &user.Verified, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
