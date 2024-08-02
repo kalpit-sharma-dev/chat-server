@@ -39,16 +39,20 @@ func registerAppRoutes(r *mux.Router) {
 
 	var err error
 	// Connect to MySQL database
-	dbmySqlCon, err := sql.Open("mysql", "kalpit:password@tcp(192.168.100.4:3306)/demo")
+	// dbmySqlCon, err := sql.Open("mysql", "kalpit:password@tcp(192.168.100.4:3306)/demo")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	dbmySqlCon, err := sql.Open("mysql", "kalpit:password@tcp(localhost:3306)/chatserver")
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	// Test database connection
 	if err := dbmySqlCon.Ping(); err != nil {
 		log.Fatal(err)
 	}
-
+	db := config.InitDB()
 	//var dbConn db.DatabaseImpl
 
 	userRepo := repository.NewUserRepository(dbmySqlCon)
@@ -58,7 +62,6 @@ func registerAppRoutes(r *mux.Router) {
 	userService := service.NewUserService(userRepo)
 	userController := controller.NewUserController(userService)
 
-	db := config.InitDB()
 	defer db.Close()
 
 	messageRepo := repository.NewMessageRepository(db)
