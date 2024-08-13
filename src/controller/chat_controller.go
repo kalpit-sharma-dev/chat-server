@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/kalpit-sharma-dev/chat-service/src/models"
 	"github.com/kalpit-sharma-dev/chat-service/src/service"
@@ -208,9 +209,15 @@ func (controller *ChatController) DeleteMessageHandler(chatService *service.Chat
 
 // GetChats retrieves the list of chats for the logged-in user.
 func (controller *ChatController) GetChats(w http.ResponseWriter, r *http.Request) {
-	userID := getUserIDFromContext(r.Context()) // Assuming you have a function to get the logged-in user's ID from the context.
-
-	chats, err := controller.ChatService.GetChatsForUser(userID)
+	// /userID := getUserIDFromContext(r.Context()) // Assuming you have a function to get the logged-in user's ID from the context.
+	vars := mux.Vars(r)
+	phone := vars["phone"]
+	value, err := strconv.Atoi(phone)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	chats, err := controller.ChatService.GetChatsForUser(value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

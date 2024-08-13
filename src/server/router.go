@@ -92,7 +92,7 @@ func registerAppRoutes(r *mux.Router) {
 
 	r.HandleFunc("/messages/edit", chatController.EditMessageHandler(chatService)).Methods("POST")
 	r.HandleFunc("/messages/delete", chatController.DeleteMessageHandler(chatService)).Methods("POST")
-	r.HandleFunc("/chats", chatController.GetChats).Methods("GET")
+	r.HandleFunc("/chats/{phone}", chatController.GetChats).Methods("GET")
 
 	//r.HandleFunc("/login", chatHandlers.Login).Methods(http.MethodPost)
 
