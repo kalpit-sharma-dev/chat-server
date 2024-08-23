@@ -16,9 +16,9 @@ func (repo *ReelRepository) CreateReel(reel *models.Reel) error {
 	return err
 }
 
-func (repo *ReelRepository) FetchReels(lastID int) ([]models.Reel, error) {
-	query := "SELECT id, user_id, video_url, created_at FROM reels WHERE id < ? ORDER BY created_at DESC LIMIT 10"
-	rows, err := repo.DB.Query(query, lastID)
+func (repo *ReelRepository) FetchReels(lastID int, limit int) ([]models.Reel, error) {
+	query := "SELECT id, user_id, video_url, created_at FROM reels WHERE id > ? ORDER BY id DESC LIMIT ?"
+	rows, err := repo.DB.Query(query, lastID, limit)
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,7 @@ type Reel struct {
 	ID        int
 	UserID    int
 	VideoURL  string
-	CreatedAt time.Time
+	CreatedAt string
 }
 
 type Like struct {

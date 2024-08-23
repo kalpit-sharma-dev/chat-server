@@ -13,8 +13,8 @@ func (service *ReelService) CreateReel(reel *models.Reel) error {
 	return service.Repo.CreateReel(reel)
 }
 
-func (service *ReelService) FetchReels(lastID int) ([]models.Reel, error) {
-	return service.Repo.FetchReels(lastID)
+func (service *ReelService) FetchReels(lastID int, limit int) ([]models.Reel, error) {
+	return service.Repo.FetchReels(lastID, limit)
 }
 
 // Implement other methods like LikeReel, CommentReel, etc.

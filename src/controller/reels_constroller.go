@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -34,15 +35,23 @@ func (c *ReelController) UploadReel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *ReelController) FetchReels(w http.ResponseWriter, r *http.Request) {
+	log.Println("Inside fetch reels")
+
 	lastIDStr := r.URL.Query().Get("last_id")
 	lastID, _ := strconv.Atoi(lastIDStr)
 
-	reels, err := c.Service.FetchReels(lastID)
+	limitStr := r.URL.Query().Get("limit")
+	limit, _ := strconv.Atoi(limitStr)
+	if limit == 0 {
+		limit = 10 // Default limit if none provided
+	}
+
+	reels, err := c.Service.FetchReels(lastID, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	log.Println("output fetch reels %v", reels)
 	json.NewEncoder(w).Encode(reels)
 }
 

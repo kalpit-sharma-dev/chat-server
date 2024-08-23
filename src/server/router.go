@@ -77,7 +77,7 @@ func registerAppRoutes(r *mux.Router) {
 	chatController := controller.NewChatController(chatService, mediaService)
 
 	//reels
-	reelRepository := &repository.ReelRepository{DB: db.DB}
+	reelRepository := &repository.ReelRepository{DB: dbmySqlCon}
 	reelService := &service.ReelService{Repo: reelRepository}
 	reelController := &controller.ReelController{Service: reelService}
 
