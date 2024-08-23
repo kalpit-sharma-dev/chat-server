@@ -35,7 +35,7 @@ func (repo *reactionRepository) GetReactionsByMessageID(messageID string) ([]mod
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	// /defer rows.Close()
 
 	var reactions []models.Reaction
 	for rows.Next() {

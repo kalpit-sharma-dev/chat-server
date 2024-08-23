@@ -62,7 +62,7 @@ func registerAppRoutes(r *mux.Router) {
 	userService := service.NewUserService(userRepo)
 	userController := controller.NewUserController(userService)
 
-	defer db.Close()
+	//defer db.Close()
 
 	messageRepo := repository.NewMessageRepository(db)
 	groupRepo := repository.NewGroupRepository(db)

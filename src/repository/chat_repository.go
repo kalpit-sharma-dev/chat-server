@@ -26,7 +26,7 @@ func (repo *ChatRepository) GetChatsForUser(userID int) ([]models.Chat, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	//defer rows.Close()
 
 	var chats []models.Chat
 	for rows.Next() {
