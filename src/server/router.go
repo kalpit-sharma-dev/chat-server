@@ -76,6 +76,11 @@ func registerAppRoutes(r *mux.Router) {
 	mediaService := service.NewMediaService(mediaRepo, s3Client, "your-s3-bucket-name")
 	chatController := controller.NewChatController(chatService, mediaService)
 
+	//reels
+	reelRepository := &repository.ReelRepository{DB: db.DB}
+	reelService := &service.ReelService{Repo: reelRepository}
+	reelController := &controller.ReelController{Service: reelService}
+
 	go chatService.HandleMessages()
 
 	r.HandleFunc("/register", userController.RegisterUser).Methods("POST")
@@ -93,6 +98,14 @@ func registerAppRoutes(r *mux.Router) {
 	r.HandleFunc("/messages/edit", chatController.EditMessageHandler(chatService)).Methods("POST")
 	r.HandleFunc("/messages/delete", chatController.DeleteMessageHandler(chatService)).Methods("POST")
 	r.HandleFunc("/chats/{phone}", chatController.GetChats).Methods("GET")
+
+	//reels
+	r.HandleFunc("/reels/upload", reelController.UploadReel).Methods("POST")
+	r.HandleFunc("/reels", reelController.FetchReels).Methods("GET")
+	r.HandleFunc("/reels/{id}/like", reelController.LikeReel).Methods("POST")
+	r.HandleFunc("/reels/{id}/unlike", reelController.UnlikeReel).Methods("POST")
+	r.HandleFunc("/reels/{id}/comment", reelController.CommentOnReel).Methods("POST")
+	r.HandleFunc("/reels/{id}/comments", reelController.GetCommentsForReel).Methods("GET")
 
 	//r.HandleFunc("/login", chatHandlers.Login).Methods(http.MethodPost)
 
