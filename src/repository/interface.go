@@ -12,4 +12,5 @@ type IUserRepository interface {
 	CreateUser(user *models.User) error
 	GetUserByPhone(phone string) (*models.User, error)
 	UpdateUser(user *models.User) error
+	CheckUserInDB(phoneNumber string) (bool, error)
 }

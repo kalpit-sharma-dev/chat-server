@@ -69,3 +69,22 @@ func (controller *UserController) LoginUser(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Login successful", "token": token})
 }
+
+func (controller *UserController) CheckUser(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		PhoneNumber string `json:"phoneNumber"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	isRegistered, err := controller.UserService.CheckUserService(input.PhoneNumber)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, map[string]bool{"isRegistered": isRegistered})
+}

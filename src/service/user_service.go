@@ -82,3 +82,7 @@ func (service *UserService) LoginUser(phone string) error {
 	}
 	return nil
 }
+
+func (service *UserService) CheckUserService(phoneNumber string) (bool, error) {
+	return service.UserRepo.CheckUserInDB(phoneNumber)
+}

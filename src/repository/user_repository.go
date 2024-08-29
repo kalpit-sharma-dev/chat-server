@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/kalpit-sharma-dev/chat-service/src/models"
 )
@@ -31,4 +32,16 @@ func (repo *UserRepository) GetUserByPhone(phone string) (*models.User, error) {
 func (repo *UserRepository) UpdateUser(user *models.User) error {
 	_, err := repo.DB.Exec("UPDATE users SET verified=? WHERE phone=?", user.Verified, user.Phone)
 	return err
+}
+
+func (repo *UserRepository) CheckUserInDB(phoneNumber string) (bool, error) {
+	var exists bool
+
+	query := "SELECT EXISTS(SELECT 1 FROM users WHERE phone_number = ?)"
+	err := repo.DB.QueryRow(query, phoneNumber).Scan(&exists)
+	if err != nil && err != sql.ErrNoRows {
+		return false, fmt.Errorf("could not execute query: %v", err)
+	}
+
+	return exists, nil
 }

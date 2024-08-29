@@ -86,6 +86,7 @@ func registerAppRoutes(r *mux.Router) {
 	r.HandleFunc("/register", userController.RegisterUser).Methods("POST")
 	r.HandleFunc("/verify", userController.VerifyUser).Methods("POST")
 	r.HandleFunc("/login", userController.LoginUser).Methods("POST")
+	r.HandleFunc("/check-user", userController.CheckUser).Methods("POST")
 
 	r.HandleFunc("/ws", chatController.HandleWebSocket)
 

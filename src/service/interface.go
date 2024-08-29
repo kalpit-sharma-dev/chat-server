@@ -16,4 +16,5 @@ type IUserService interface {
 	GenerateVerificationCode() string
 	VerifyUser(phone string, code string) error
 	LoginUser(phone string) error
+	CheckUserService(phoneNumber string) (bool, error)
 }
