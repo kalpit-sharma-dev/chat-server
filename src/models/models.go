@@ -140,3 +140,7 @@ type Chat struct {
 	Name    string `json:"name"`
 	IsGroup bool   `json:"is_group"`
 }
+
+type CheckUserResposne struct {
+	IsRegistered bool `json:"isRegistered"`
+}

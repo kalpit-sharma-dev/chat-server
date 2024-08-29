@@ -26,7 +26,15 @@ func (controller *UserController) RegisterUser(w http.ResponseWriter, r *http.Re
 	req.Email = email
 	req.UserName = userName
 	req.Password = password
-	req.Phone = phone
+	if len(phone) != 10 {
+		http.Error(w, "phone number should be 10 digits", http.StatusBadRequest)
+		return
+	} else {
+		phone = "+91" + phone
+		req.Phone = phone
+
+	}
+
 	err := controller.UserService.RegisterUser(req, phone)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
@@ -85,6 +93,8 @@ func (controller *UserController) CheckUser(w http.ResponseWriter, r *http.Reque
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	utils.RespondWithJSON(w, http.StatusOK, map[string]bool{"isRegistered": isRegistered})
+	response := models.CheckUserResposne{
+		IsRegistered: isRegistered,
+	}
+	utils.RespondWithJSON(w, http.StatusOK, response)
 }
