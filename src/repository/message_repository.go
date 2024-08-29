@@ -25,7 +25,7 @@ func (repo *MessageRepository) SaveMessage(message *models.Message) error {
 
 	uuidString := newUUID.String()
 
-	message.ID = message.Sender + uuidString
+	message.ID = message.Sender + "|" + uuidString
 	_, err := repo.db.Exec(query, message.ID, message.Sender, message.Receiver, message.Content, message.Timestamp, message.IsForwarded, message.OriginalSender, message.OriginalMessageID, message.IsEdited, message.IsDeleted)
 
 	if err != nil {
