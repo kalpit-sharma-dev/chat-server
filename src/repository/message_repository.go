@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/kalpit-sharma-dev/chat-service/src/models"
+	"github.com/kalpit-sharma-dev/chat-service/src/utils"
 )
 
 type MessageRepository struct {
@@ -26,6 +27,9 @@ func (repo *MessageRepository) SaveMessage(message *models.Message) error {
 	uuidString := newUUID.String()
 
 	message.ID = message.Sender + "|" + uuidString
+
+	message.Sender = utils.RemoveAllButNumbersAndPlus(message.Sender)
+	message.Receiver = utils.RemoveAllButNumbersAndPlus(message.Receiver)
 	_, err := repo.db.Exec(query, message.ID, message.Sender, message.Receiver, message.Content, message.Timestamp, message.IsForwarded, message.OriginalSender, message.OriginalMessageID, message.IsEdited, message.IsDeleted)
 
 	if err != nil {
