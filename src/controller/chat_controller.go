@@ -63,7 +63,7 @@ func (controller *ChatController) HandleWebSocket(w http.ResponseWriter, r *http
 			message["content"] = ""
 		}
 		log.Println("#####Message######", message)
-		if groupID, ok := message["group_id"].(float64); !ok {
+		if groupID, ok := message["group_id"].(float64); ok {
 			groupMessage := models.GroupMessage{
 				GroupID:   int64(groupID),
 				Sender:    claims.Phone,
