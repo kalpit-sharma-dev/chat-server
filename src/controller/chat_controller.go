@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -33,6 +34,12 @@ func NewChatController(chatService *service.ChatService, mediaService *service.M
 }
 
 func (controller *ChatController) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+	log.Println("Inside Web Socket")
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		http.Error(w, "Failed to upgrade to WebSocket", http.StatusInternalServerError)
+		return
+	}
 	tokenStr := r.URL.Query().Get("token")
 	claims, err := utils.ValidateJWT(tokenStr)
 	if err != nil {
@@ -40,11 +47,6 @@ func (controller *ChatController) HandleWebSocket(w http.ResponseWriter, r *http
 		return
 	}
 
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		http.Error(w, "Failed to upgrade to WebSocket", http.StatusInternalServerError)
-		return
-	}
 	defer conn.Close()
 
 	controller.ChatService.AddClient(claims.Phone, conn)
@@ -56,8 +58,12 @@ func (controller *ChatController) HandleWebSocket(w http.ResponseWriter, r *http
 		if err != nil {
 			break
 		}
-
-		if groupID, ok := message["group_id"].(float64); ok {
+		log.Println("#####Message1111######", message)
+		if _, ok := message["content"].(string); !ok {
+			message["content"] = ""
+		}
+		log.Println("#####Message######", message)
+		if groupID, ok := message["group_id"].(float64); !ok {
 			groupMessage := models.GroupMessage{
 				GroupID:   int64(groupID),
 				Sender:    claims.Phone,

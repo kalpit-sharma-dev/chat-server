@@ -20,7 +20,7 @@ import (
 func LoadRoute() {
 	log.Println("INFO : Loading Router")
 	router := mux.NewRouter().PathPrefix("/chat-service/api").Subrouter()
-	router.Use(headerMiddleware)
+	router.Use(headerMiddleware, corsMiddleware)
 	registerAppRoutes(router)
 	log.Println("INFO : Router Loaded Successfully")
 	log.Println("INFO : Application is started Successfully")
@@ -131,6 +131,15 @@ func registerAppRoutes(r *mux.Router) {
 func headerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		next.ServeHTTP(w, r)
 	})
 }
