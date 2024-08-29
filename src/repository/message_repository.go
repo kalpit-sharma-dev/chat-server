@@ -2,7 +2,9 @@ package repository
 
 import (
 	"database/sql"
+	"log"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/kalpit-sharma-dev/chat-service/src/models"
 )
@@ -18,7 +20,17 @@ func NewMessageRepository(db *sqlx.DB) *MessageRepository {
 func (repo *MessageRepository) SaveMessage(message *models.Message) error {
 	query := `INSERT INTO messages (id, sender, receiver, content, timestamp, is_forwarded, original_sender, original_message_id, is_edited, is_deleted)
 	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	newUUID := uuid.New()
+
+	uuidString := newUUID.String()
+
+	message.ID = message.Sender + uuidString
 	_, err := repo.db.Exec(query, message.ID, message.Sender, message.Receiver, message.Content, message.Timestamp, message.IsForwarded, message.OriginalSender, message.OriginalMessageID, message.IsEdited, message.IsDeleted)
+
+	if err != nil {
+		log.Println("SaveMessage error ", err)
+	}
 	return err
 }
 
