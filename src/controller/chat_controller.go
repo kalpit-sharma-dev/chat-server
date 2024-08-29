@@ -41,6 +41,7 @@ func (controller *ChatController) HandleWebSocket(w http.ResponseWriter, r *http
 		return
 	}
 	tokenStr := r.URL.Query().Get("token")
+	log.Println("**************************   ", tokenStr)
 	claims, err := utils.ValidateJWT(tokenStr)
 	if err != nil {
 		http.Error(w, "Invalid token", http.StatusUnauthorized)
@@ -48,7 +49,7 @@ func (controller *ChatController) HandleWebSocket(w http.ResponseWriter, r *http
 	}
 
 	defer conn.Close()
-
+	log.Println(claims)
 	controller.ChatService.AddClient(claims.Phone, conn)
 	defer controller.ChatService.RemoveClient(claims.Phone)
 

@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 )
 
 // RespondJSON sends a JSON response with the provided status code and data
@@ -26,4 +27,11 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 
 func RespondWithError(w http.ResponseWriter, code int, message string) {
 	RespondWithJSON(w, code, map[string]string{"error": message})
+}
+
+func RemoveAllButNumbersAndPlus(input string) string {
+	// Compile the regular expression to match all characters except digits and '+'
+	re := regexp.MustCompile(`[^0-9+]`)
+	// Replace all matches with an empty string
+	return re.ReplaceAllString(input, "")
 }

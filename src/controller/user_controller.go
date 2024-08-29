@@ -64,6 +64,7 @@ func (controller *UserController) VerifyUser(w http.ResponseWriter, r *http.Requ
 func (controller *UserController) LoginUser(w http.ResponseWriter, r *http.Request) {
 	phone := r.FormValue("phone")
 	log.Println(phone)
+	phone = utils.RemoveAllButNumbersAndPlus(phone)
 	if len(phone) != 10 {
 		http.Error(w, "phone number should be 10 digits", http.StatusBadRequest)
 		return
@@ -77,7 +78,7 @@ func (controller *UserController) LoginUser(w http.ResponseWriter, r *http.Reque
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-
+	log.Println("JWTToke for ", phone)
 	token, err := utils.GenerateJWT(phone)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
@@ -97,7 +98,8 @@ func (controller *UserController) CheckUser(w http.ResponseWriter, r *http.Reque
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-	phone := strings.ReplaceAll(input.PhoneNumber, " ", "")
+	phone := utils.RemoveAllButNumbersAndPlus(input.PhoneNumber)
+	phone = strings.ReplaceAll(phone, " ", "")
 	if contains := strings.Contains(phone, "+91"); !contains {
 		phone = "+91" + phone
 	}
