@@ -2,7 +2,9 @@ package controller
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/kalpit-sharma-dev/chat-service/src/models"
 	"github.com/kalpit-sharma-dev/chat-service/src/service"
@@ -37,7 +39,7 @@ func (controller *UserController) RegisterUser(w http.ResponseWriter, r *http.Re
 
 	err := controller.UserService.RegisterUser(req, phone)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		http.Error(w, "user already registered", http.StatusConflict)
 		return
 	}
 
@@ -61,7 +63,15 @@ func (controller *UserController) VerifyUser(w http.ResponseWriter, r *http.Requ
 
 func (controller *UserController) LoginUser(w http.ResponseWriter, r *http.Request) {
 	phone := r.FormValue("phone")
-
+	log.Println(phone)
+	if len(phone) != 10 {
+		http.Error(w, "phone number should be 10 digits", http.StatusBadRequest)
+		return
+	} else {
+		phone = strings.ReplaceAll(phone, " ", "")
+		phone = "+91" + phone
+		log.Println(phone)
+	}
 	err := controller.UserService.LoginUser(phone)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -87,8 +97,12 @@ func (controller *UserController) CheckUser(w http.ResponseWriter, r *http.Reque
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-
-	isRegistered, err := controller.UserService.CheckUserService(input.PhoneNumber)
+	phone := strings.ReplaceAll(input.PhoneNumber, " ", "")
+	if contains := strings.Contains(phone, "+91"); !contains {
+		phone = "+91" + phone
+	}
+	log.Println(phone)
+	isRegistered, err := controller.UserService.CheckUserService(phone)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return

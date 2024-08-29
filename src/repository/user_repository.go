@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/kalpit-sharma-dev/chat-service/src/models"
 )
@@ -36,7 +37,7 @@ func (repo *UserRepository) UpdateUser(user *models.User) error {
 
 func (repo *UserRepository) CheckUserInDB(phoneNumber string) (bool, error) {
 	var exists bool
-
+	log.Println(phoneNumber)
 	query := "SELECT EXISTS(SELECT 1 FROM users WHERE phone_number = ?)"
 	err := repo.DB.QueryRow(query, phoneNumber).Scan(&exists)
 	if err != nil && err != sql.ErrNoRows {
