@@ -72,13 +72,16 @@ func (service *UserService) VerifyUser(phone string, code string) error {
 	return service.UserRepo.UpdateUser(user)
 }
 
-func (service *UserService) LoginUser(phone string) error {
-	user, err := service.UserRepo.GetUserByPhone(phone)
+func (service *UserService) LoginUser(inputUser models.User) error {
+	user, err := service.UserRepo.GetUserByPhone(inputUser.Phone)
 	if err != nil {
 		return fmt.Errorf("user not found")
 	}
 	if !user.Verified {
 		return fmt.Errorf("user not verified")
+	}
+	if user.Password != inputUser.Password {
+		return fmt.Errorf("password mismatch , wrong password")
 	}
 	return nil
 }

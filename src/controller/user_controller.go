@@ -63,6 +63,8 @@ func (controller *UserController) VerifyUser(w http.ResponseWriter, r *http.Requ
 
 func (controller *UserController) LoginUser(w http.ResponseWriter, r *http.Request) {
 	phone := r.FormValue("phone")
+
+	password := r.FormValue("password")
 	log.Println(phone)
 	phone = utils.RemoveAllButNumbersAndPlus(phone)
 	if len(phone) != 10 {
@@ -73,12 +75,17 @@ func (controller *UserController) LoginUser(w http.ResponseWriter, r *http.Reque
 		phone = "+91" + phone
 		log.Println(phone)
 	}
-	err := controller.UserService.LoginUser(phone)
+
+	user := models.User{
+		Phone:    phone,
+		Password: password,
+	}
+	err := controller.UserService.LoginUser(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	log.Println("JWTToke for ", phone)
+	log.Println("JWTToken for ", phone)
 	token, err := utils.GenerateJWT(phone)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)

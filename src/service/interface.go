@@ -15,6 +15,6 @@ type IUserService interface {
 	SendVerificationCode(phone string, code string) error
 	GenerateVerificationCode() string
 	VerifyUser(phone string, code string) error
-	LoginUser(phone string) error
+	LoginUser(user models.User) error
 	CheckUserService(phoneNumber string) (bool, error)
 }
