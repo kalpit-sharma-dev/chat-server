@@ -7,6 +7,7 @@ import (
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/messaging"
+	"github.com/kalpit-sharma-dev/chat-service/src/models"
 )
 
 func sendToToken(app *firebase.App) {
@@ -72,4 +73,40 @@ func sendMultiClients(ctx context.Context, client *messaging.Client) {
 	}
 
 	fmt.Printf("%d messages were sent successfully\n", br.SuccessCount)
+}
+
+func handleIncomingMessage(userID string, message string) {
+	// Check the recipient's status
+	status, err := getUserStatus(userID)
+	if err != nil {
+		log.Println("Error fetching user status: ", err)
+		return
+	}
+
+	// If user is offline, send a push notification
+	if !status.Online {
+		payload := models.NotificationPayload{
+			To: userID,
+		}
+		payload.Data.Title = "New Message"
+		payload.Data.Body = message
+
+		err := sendPushNotification(payload)
+		if err != nil {
+			log.Println("Error sending push notification: ", err)
+		}
+	}
+}
+
+// Simulate a function to get user status from the database
+func getUserStatus(userID string) (*models.UserStatus, error) {
+	// In a real implementation, query the database for user status
+	return &models.UserStatus{UserID: userID, Online: false}, nil
+}
+
+// Simulate a function to send a push notification
+func sendPushNotification(payload models.NotificationPayload) error {
+	// In a real implementation, use FCM to send the notification
+	log.Println("Sending push notification to: %s, title: %s, body: %s", payload.To, payload.Data.Title, payload.Data.Body)
+	return nil
 }
