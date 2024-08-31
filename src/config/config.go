@@ -82,11 +82,14 @@ CREATE TABLE IF NOT EXISTS chats (
     is_group BOOLEAN NOT NULL DEFAULT FALSE
 );
 
+
 CREATE TABLE IF NOT EXISTS chat_members (
-    chat_id INTEGER,
-    user_id INTEGER,
+    chat_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT,
     FOREIGN KEY (chat_id) REFERENCES chats (id),
-    FOREIGN KEY (user_id) REFERENCES users (id)
+    FOREIGN KEY (user_id) REFERENCES users (id),
+	UNIQUE (chat_id, user_id)
+
 );
 	`)
 	if err != nil {

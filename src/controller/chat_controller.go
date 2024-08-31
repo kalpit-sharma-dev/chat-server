@@ -3,12 +3,12 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/kalpit-sharma-dev/chat-service/src/models"
 	"github.com/kalpit-sharma-dev/chat-service/src/service"
@@ -41,7 +41,7 @@ func (controller *ChatController) HandleWebSocket(w http.ResponseWriter, r *http
 		return
 	}
 	tokenStr := r.URL.Query().Get("token")
-	log.Println("**************************   ", tokenStr)
+	log.Println("************HandleWebSocket**************   ", tokenStr)
 	claims, err := utils.ValidateJWT(tokenStr)
 	if err != nil {
 		http.Error(w, "Invalid token", http.StatusUnauthorized)
@@ -215,21 +215,38 @@ func (controller *ChatController) DeleteMessageHandler(chatService *service.Chat
 }
 
 // GetChats retrieves the list of chats for the logged-in user.
-func (controller *ChatController) GetChats(w http.ResponseWriter, r *http.Request) {
+func (controller *ChatController) GetMessages(w http.ResponseWriter, r *http.Request) {
 	// /userID := getUserIDFromContext(r.Context()) // Assuming you have a function to get the logged-in user's ID from the context.
-	vars := mux.Vars(r)
-	phone := vars["phone"]
-	value, err := strconv.Atoi(phone)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	chats, err := controller.ChatService.GetChatsForUser(value)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	// vars := mux.Vars(r)
+	// otherUser := vars["phone"]
+	// value, err := strconv.Atoi(phone)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
 
+	// Parse query parameters
+	queryParams := r.URL.Query()
+
+	// Access individual query parameters
+	tokenStr := queryParams.Get("token")
+	otherUser := queryParams.Get("phone")
+	//page := queryParams.Get("page")
+	//limit := queryParams.Get("limit")
+
+	//tokenStr := r.URL.Query().Get("token")
+	log.Println("**************************Messages   ", tokenStr)
+	claims, err := utils.ValidateJWT(tokenStr)
+	if err != nil {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+	chats, err := controller.ChatService.GetChatsForUser(claims.Phone, otherUser)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("$$$$$$$", chats)
 	RespondJSON(w, chats)
 }
 

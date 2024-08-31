@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/google/uuid"
@@ -19,8 +20,39 @@ func NewMessageRepository(db *sqlx.DB) *MessageRepository {
 }
 
 func (repo *MessageRepository) SaveMessage(message *models.Message) error {
-	query := `INSERT INTO messages (id, sender, receiver, content, timestamp, is_forwarded, original_sender, original_message_id, is_edited, is_deleted)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	var lastInsertID int64 = 0
+	selectQuery := "SELECT sender, receiver , chat_id FROM messages WHERE (sender = ? and receiver = ?) OR (receiver = ? and sender = ?) LIMIT ?"
+	rows, err := repo.db.Query(selectQuery, message.Sender, message.Receiver, message.Receiver, message.Sender, 1)
+	if err != nil {
+		log.Println("failed to select messages %w", err)
+		return fmt.Errorf("failed to select messages %w", err)
+	}
+	if rows.Next() {
+
+		chatMembersQuery := `INSERT INTO chat_members ( user_id) VALUES (?)`
+
+		result, err := repo.db.Exec(chatMembersQuery, message.Sender)
+		if err != nil {
+			log.Println("ffailed to insert chatMembersQuery %w", err)
+			return fmt.Errorf("failed to insert chatMembersQuery %w", err)
+		}
+		// Access the result
+		affectedRows, err := result.RowsAffected()
+		if err != nil {
+			log.Println("failed to get affected rows: %w", err)
+			return fmt.Errorf("failed to get affected rows: %w", err)
+		}
+		fmt.Printf("Number of rows affected: %d\n", affectedRows)
+
+		lastInsertID, err = result.LastInsertId()
+		if err != nil {
+			log.Println("failed to get last insert ID: %w", err)
+			return fmt.Errorf("failed to get last insert ID: %w", err)
+		}
+	}
+	query := `INSERT INTO messages (id,chat_id, sender, receiver, content, timestamp, is_forwarded, original_sender, original_message_id, is_edited, is_deleted)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)`
 
 	newUUID := uuid.New()
 
@@ -30,7 +62,8 @@ func (repo *MessageRepository) SaveMessage(message *models.Message) error {
 
 	message.Sender = utils.RemoveAllButNumbersAndPlus(message.Sender)
 	message.Receiver = utils.RemoveAllButNumbersAndPlus(message.Receiver)
-	_, err := repo.db.Exec(query, message.ID, message.Sender, message.Receiver, message.Content, message.Timestamp, message.IsForwarded, message.OriginalSender, message.OriginalMessageID, message.IsEdited, message.IsDeleted)
+
+	_, err = repo.db.Exec(query, message.ID, lastInsertID, message.Sender, message.Receiver, message.Content, message.Timestamp, message.IsForwarded, message.OriginalSender, message.OriginalMessageID, message.IsEdited, message.IsDeleted)
 
 	if err != nil {
 		log.Println("SaveMessage error ", err)

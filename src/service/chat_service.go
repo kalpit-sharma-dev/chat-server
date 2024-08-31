@@ -222,6 +222,6 @@ func (service *ChatService) DeleteMessage(messageID string) error {
 }
 
 // GetChatsForUser retrieves the list of chats for a given user.
-func (s *ChatService) GetChatsForUser(userID int) ([]models.Chat, error) {
-	return s.chatRepo.GetChatsForUser(userID)
+func (s *ChatService) GetChatsForUser(userID, otherUser string) ([]models.Message, error) {
+	return s.chatRepo.GetChatsForUser(userID, otherUser)
 }

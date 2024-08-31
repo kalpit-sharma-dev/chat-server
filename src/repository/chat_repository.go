@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"log"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/kalpit-sharma-dev/chat-service/src/models"
 )
@@ -16,26 +18,31 @@ func NewChatRepository(db *sqlx.DB) ChatRepository {
 }
 
 // GetChatsForUser retrieves the list of chats for a given user.
-func (repo *ChatRepository) GetChatsForUser(userID int) ([]models.Chat, error) {
+func (repo *ChatRepository) GetChatsForUser(userID, otherUser string) ([]models.Message, error) {
+
+	log.Println(userID, otherUser)
 	rows, err := repo.db.Query(`
-        SELECT c.id, c.name, c.is_group
-        FROM chats c
-        JOIN chat_members cm ON c.id = cm.chat_id
-        WHERE cm.user_id = ?
-    `, userID)
+        SELECT id, sender, receiver, content, timestamp, is_forwarded, original_sender, original_message_id, is_edited, is_deleted FROM messages m
+        JOIN chat_members cm ON m.chat_id = cm.chat_id
+        WHERE cm.user_id = ? and m.sender = ? and m.receiver = ?
+    `, userID, userID, otherUser)
 	if err != nil {
+		log.Println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+		log.Println("error getting messages for a user", err)
 		return nil, err
 	}
 	//defer rows.Close()
 
-	var chats []models.Chat
+	var messages []models.Message
 	for rows.Next() {
-		var chat models.Chat
-		if err := rows.Scan(&chat.ID, &chat.Name, &chat.IsGroup); err != nil {
+		var message models.Message
+		if err := rows.Scan(&message.ID, &message.Sender, &message.Receiver, &message.Content, &message.Timestamp, &message.IsForwarded, &message.OriginalSender, &message.OriginalMessageID, &message.IsEdited, &message.IsDeleted); err != nil {
+			log.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", err)
 			return nil, err
 		}
-		chats = append(chats, chat)
+		messages = append(messages, message)
+
 	}
 
-	return chats, nil
+	return messages, nil
 }
