@@ -23,7 +23,7 @@ func SendPushNotification(deviceTokens []string) error {
 	app, err := firebase.NewApp(context.Background(), nil, opts...)
 
 	if err != nil {
-		log.Debug("Error in initializing firebase : %s", err)
+		log.Print("Error in initializing firebase : %s", err)
 		return err
 	}
 
