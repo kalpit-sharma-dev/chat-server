@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Define the list of microservices (replace with actual repo names)
+REPOS=(
+  "microservice1"
+  "microservice2"
+  "microservice3"
+  # Add all 50 repositories here
+)
+
+# GitHub org/user
+GITHUB_ORG="your-org"
+BRANCH_NAME="auto-dependency-update"
+
+# Loop through each repository
+for REPO in "${REPOS[@]}"; do
+  echo "Updating dependencies for $REPO..."
+
+  # Clone the repository
+  git clone git@github.com:$GITHUB_ORG/$REPO.git
+  cd $REPO || exit 1
+
+  # Create a new branch for the update
+  git checkout -b $BRANCH_NAME
+
+  # Update Go dependencies
+  go get -u ./...
+  go mod tidy
+
+  # Check if there are changes
+  if ! git diff --quiet; then
+    git add go.mod go.sum
+    git commit -m "Auto-update Go dependencies"
+    git push origin $BRANCH_NAME
+
+    # Create a Pull Request using GitHub CLI
+    gh pr create --title "Auto-update dependencies" --body "Automated update of Go dependencies" --base main --head $BRANCH_NAME
+  else
+    echo "No dependency updates for $REPO."
+  fi
+
+  # Move back and remove the repo folder
+  cd ..
+  rm -rf $REPO
+done
+
+echo "Dependency update process completed."
