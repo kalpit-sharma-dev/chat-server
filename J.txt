@@ -1,0 +1,152 @@
+Here's how you can create a **Java Spring Boot server application** with a **POST endpoint** from scratch using **VS Code**.
+
+---
+
+## **1. Install Necessary Tools**
+Make sure you have the following installed:
+- **Java 17+** ([Download JDK](https://adoptium.net/))
+- **Maven** ([Download Maven](https://maven.apache.org/download.cgi))
+- **Spring Boot Extension Pack** (Install in VS Code from Extensions Marketplace)
+
+---
+
+## **2. Create a New Spring Boot Project**
+### **Option 1: Use Spring Initializr**
+1. Open VS Code.
+2. Press `Ctrl + Shift + P` and type **"Spring Initializr: Generate a Maven Project"**.
+3. Select:
+   - **Language:** Java
+   - **Spring Boot Version:** Latest Stable
+   - **Dependencies:** Spring Web
+   - **Group ID:** `com.example`
+   - **Artifact ID:** `spring-boot-server`
+4. Click **"Generate"**, then open the project in VS Code.
+
+---
+
+## **3. Define Project Structure**
+```
+spring-boot-server/
+ ├── src/main/java/com/example/demo
+ │   ├── DemoApplication.java
+ │   ├── controller/UserController.java
+ │   ├── model/User.java
+ ├── pom.xml
+```
+
+---
+
+## **4. Write the Code**
+### **4.1. Main Application (`DemoApplication.java`)**
+This is the entry point for your Spring Boot app.
+
+```java
+package com.example.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DemoApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}
+```
+
+---
+
+### **4.2. Create a Model (`User.java`)**
+This class defines the data structure for the request body.
+
+```java
+package com.example.demo.model;
+
+public class User {
+    private String name;
+    private int age;
+
+    public User() {}
+
+    public User(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+}
+```
+
+---
+
+### **4.3. Create a Controller (`UserController.java`)**
+This handles HTTP POST requests.
+
+```java
+package com.example.demo.controller;
+
+import com.example.demo.model.User;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    @PostMapping
+    public String createUser(@RequestBody User user) {
+        return "User " + user.getName() + " with age " + user.getAge() + " created!";
+    }
+}
+```
+
+---
+
+## **5. Run the Application**
+### **Option 1: Using VS Code**
+1. Open the terminal (`Ctrl + ~`).
+2. Run:
+   ```sh
+   mvn spring-boot:run
+   ```
+
+### **Option 2: Using Java**
+1. Compile and run:
+   ```sh
+   mvn clean package
+   java -jar target/spring-boot-server-0.0.1-SNAPSHOT.jar
+   ```
+
+---
+
+## **6. Test the POST Endpoint**
+Use **Postman** or **cURL** to send a request.
+
+### **cURL Command:**
+```sh
+curl -X POST http://localhost:8080/api/users \
+     -H "Content-Type: application/json" \
+     -d '{"name":"John Doe","age":30}'
+```
+
+### **Expected Response:**
+```json
+"User John Doe with age 30 created!"
+```
+
+---
+
+This is a basic Spring Boot **POST API** setup in **VS Code**. Let me know if you need improvements or a database integration!
