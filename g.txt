@@ -1,0 +1,55 @@
+Here's a **Golang** program using the `net/http` package to make the same API request as your `curl` command:
+
+```go
+package main
+
+import (
+	"bytes"
+	"fmt"
+	"net/http"
+	"io/ioutil"
+)
+
+func main() {
+	url := "http://localhost:8080/api/users"
+	jsonData := `{"name":"John Doe","age":30}`
+
+	// Create a new HTTP request
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(jsonData)))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Read response
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response:", err)
+		return
+	}
+
+	// Print response
+	fmt.Println("Response Status:", resp.Status)
+	fmt.Println("Response Body:", string(body))
+}
+```
+
+### **Explanation:**
+1. **Create a `POST` request** with JSON data.
+2. **Set the `Content-Type` header** to `"application/json"`.
+3. **Send the request** using `http.Client{}`
+4. **Read and print the response.**
+
+This should correctly send the request to your **Spring Boot API**. Let me know if you need modifications!
