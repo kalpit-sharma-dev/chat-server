@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 )
@@ -16,13 +18,15 @@ type Request struct {
 }
 
 // Worker function to process requests
-func worker(id int, jobs <-chan Request, wg *sync.WaitGroup) {
+func worker(id int, jobs <-chan Request, wg *sync.WaitGroup, logger *log.Logger) {
 	defer wg.Done()
 	for req := range jobs {
+		logger.Printf("Worker %d: Processing request to %s\n", id, req.URL)
+
 		// Create HTTP POST request
 		request, err := http.NewRequest("POST", req.URL, bytes.NewBuffer(req.Payload))
 		if err != nil {
-			fmt.Printf("Worker %d: Error creating request: %v\n", id, err)
+			logger.Printf("Worker %d: Error creating request: %v\n", id, err)
 			continue
 		}
 		request.Header.Set("Content-Type", "application/json")
@@ -30,10 +34,10 @@ func worker(id int, jobs <-chan Request, wg *sync.WaitGroup) {
 		// Send request
 		resp, err := req.Client.Do(request)
 		if err != nil {
-			fmt.Printf("Worker %d: Error making request: %v\n", id, err)
+			logger.Printf("Worker %d: Error making request: %v\n", id, err)
 			continue
 		}
-		fmt.Printf("Worker %d: Received response with status: %s\n", id, resp.Status)
+		logger.Printf("Worker %d: Received response with status: %s\n", id, resp.Status)
 		resp.Body.Close()
 	}
 }
@@ -41,6 +45,17 @@ func worker(id int, jobs <-chan Request, wg *sync.WaitGroup) {
 func main() {
 	const numWorkers = 5
 	const numJobs = 10
+
+	// Create log file
+	logFile, err := os.OpenFile("worker.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Println("Error creating log file:", err)
+		return
+	}
+	defer logFile.Close()
+
+	// Initialize logger
+	logger := log.New(logFile, "", log.LstdFlags)
 
 	// Create HTTP client
 	client := &http.Client{
@@ -54,7 +69,7 @@ func main() {
 	// Start worker goroutines
 	for i := 1; i <= numWorkers; i++ {
 		wg.Add(1)
-		go worker(i, jobs, &wg)
+		go worker(i, jobs, &wg, logger)
 	}
 
 	// API Endpoint
@@ -71,5 +86,5 @@ func main() {
 
 	// Wait for all workers to finish
 	wg.Wait()
-	fmt.Println("All requests completed.")
+	logger.Println("All requests completed.")
 }
