@@ -1,0 +1,110 @@
+Here is a simple **Golang HTTP server** using the `net/http` package that handles the `POST /api/users` request and logs the request details to a file.  
+
+### **Golang Server Code**
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+)
+
+// User represents the JSON request body structure
+type User struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+}
+
+// Logger to write logs to a file
+var logger *log.Logger
+
+func init() {
+	// Create or open a log file
+	file, err := os.OpenFile("server.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+
+	// Initialize logger
+	logger = log.New(file, "LOG: ", log.Ldate|log.Ltime|log.Lshortfile)
+}
+
+// Handler for /api/users
+func userHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse JSON request body
+	var user User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		logger.Println("Error decoding request body:", err)
+		return
+	}
+
+	// Log request details
+	logger.Printf("Received User: Name=%s, Age=%d\n", user.Name, user.Age)
+
+	// Respond with a success message
+	response := map[string]string{"message": "User created successfully"}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func main() {
+	// Set up HTTP server
+	http.HandleFunc("/api/users", userHandler)
+
+	// Start server on port 8080
+	fmt.Println("Server is running on port 8080...")
+	logger.Println("Server started on port 8080")
+
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		logger.Fatalf("Server failed: %v", err)
+	}
+}
+```
+
+---
+
+### **How It Works**
+1. **Starts an HTTP server on `localhost:8080`.**
+2. **Handles `POST /api/users` requests**, expecting a JSON body:
+   ```json
+   {
+     "name": "John Doe",
+     "age": 30
+   }
+   ```
+3. **Logs request details to `server.log`** file.
+4. **Returns a success response**:
+   ```json
+   {
+     "message": "User created successfully"
+   }
+   ```
+
+---
+
+### **How to Test**
+Run the Golang server:
+```sh
+go run main.go
+```
+
+Then, send the request using `curl`:
+```sh
+curl -X POST http://localhost:8080/api/users \
+     -H "Content-Type: application/json" \
+     -d '{"name":"John Doe","age":30}'
+```
+
+Would you like me to add anything, such as structured logging or database integration?
