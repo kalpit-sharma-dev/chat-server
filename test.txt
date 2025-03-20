@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -10,37 +11,52 @@ import (
 )
 
 var (
-	stopLoop    = make(chan struct{}) // Channel to signal stopping the infinite loop
-	wg          sync.WaitGroup        // WaitGroup to track goroutines
-	running     bool                  // Flag to track infinite loop status
-	routineLock sync.Mutex            // Mutex to synchronize goroutine count
+	cancelFunc context.CancelFunc
+	wg         sync.WaitGroup
+	running    bool
+	loopMutex  sync.Mutex
 )
 
 // Infinite loop function that spawns a goroutine to call an API
-func startInfiniteLoop() {
-	log.Println("Starting infinite loop...")
+func startInfiniteLoop(ctx context.Context) {
+	loopMutex.Lock()
+	if running {
+		log.Println("Loop already running, ignoring request.")
+		loopMutex.Unlock()
+		return
+	}
 	running = true
+	loopMutex.Unlock()
 
-	for running {
+	log.Println("Starting infinite loop...")
+
+	for {
 		select {
-		case <-stopLoop:
-			log.Println("Stopping infinite loop...")
+		case <-ctx.Done():
+			log.Println("Stopping infinite loop and all goroutines...")
 			running = false
 			return
 		default:
 			wg.Add(1)
-			go callAPI() // Goroutine making API call
+			go callAPI(ctx) // Goroutine making API call
 			time.Sleep(1 * time.Second) // Wait before next iteration
 		}
 	}
 }
 
 // Function to make an API call
-func callAPI() {
+func callAPI(ctx context.Context) {
 	defer wg.Done()
 
 	url := "https://jsonplaceholder.typicode.com/todos/1" // Example API
-	resp, err := http.Get(url)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil) // Attach context to the request
+	if err != nil {
+		log.Printf("Failed to create request: %v", err)
+		return
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Printf("API request failed: %v", err)
 		return
@@ -61,12 +77,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("call")
 
 	if query == "true" {
-		go startInfiniteLoop()
+		ctx, cancel := context.WithCancel(context.Background())
+		cancelFunc = cancel
+		go startInfiniteLoop(ctx)
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "Started infinite loop with API calls.")
 	} else if query == "false" {
-		close(stopLoop) // Stop infinite loop
-		wg.Wait()       // Wait for all goroutines to complete
+		if cancelFunc != nil {
+			cancelFunc() // Stop all goroutines immediately
+		}
+		wg.Wait() // Wait for all goroutines to complete
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "All goroutines stopped.")
 	} else {
