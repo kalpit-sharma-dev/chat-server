@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"sync"
@@ -15,47 +16,54 @@ var (
 	routineLock sync.Mutex            // Mutex to synchronize goroutine count
 )
 
+// Infinite loop function that spawns a goroutine to call an API
 func startInfiniteLoop() {
 	log.Println("Starting infinite loop...")
 	running = true
-	for {
+
+	for running {
 		select {
 		case <-stopLoop:
 			log.Println("Stopping infinite loop...")
+			running = false
 			return
 		default:
-			// Simulate work
-			time.Sleep(500 * time.Millisecond)
+			wg.Add(1)
+			go callAPI() // Goroutine making API call
+			time.Sleep(1 * time.Second) // Wait before next iteration
 		}
 	}
 }
 
-func worker() {
+// Function to make an API call
+func callAPI() {
 	defer wg.Done()
 
-	// Simulated error scenario
-	err := doWork()
+	url := "https://jsonplaceholder.typicode.com/todos/1" // Example API
+	resp, err := http.Get(url)
 	if err != nil {
-		log.Printf("Worker error: %v\n", err)
+		log.Printf("API request failed: %v", err)
+		return
 	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Failed to read API response: %v", err)
+		return
+	}
+
+	log.Printf("API Response: %s", body)
 }
 
-func doWork() error {
-	// Simulate a task with a potential error
-	time.Sleep(2 * time.Second) // Simulate work
-	return fmt.Errorf("simulated error")
-}
-
+// API handler
 func handler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("call")
 
 	if query == "true" {
-		routineLock.Lock()
-		wg.Add(1)
-		go worker()
-		routineLock.Unlock()
+		go startInfiniteLoop()
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "Started a new goroutine.")
+		fmt.Fprintln(w, "Started infinite loop with API calls.")
 	} else if query == "false" {
 		close(stopLoop) // Stop infinite loop
 		wg.Wait()       // Wait for all goroutines to complete
@@ -66,9 +74,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Main function
 func main() {
-	go startInfiniteLoop()
-
 	http.HandleFunc("/api", handler)
 
 	log.Println("Server started on :8080")
