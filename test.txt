@@ -39,7 +39,13 @@ func startInfiniteLoop(ctx context.Context) {
 		default:
 			wg.Add(1)
 			go callAPI(ctx) // Goroutine making API call
-			time.Sleep(1 * time.Second) // Wait before next iteration
+			select {
+			case <-ctx.Done():
+				log.Println("Loop received stop signal, exiting.")
+				running = false
+				return
+			case <-time.After(1 * time.Second): // Sleep before next iteration
+			}
 		}
 	}
 }
@@ -48,7 +54,15 @@ func startInfiniteLoop(ctx context.Context) {
 func callAPI(ctx context.Context) {
 	defer wg.Done()
 
-	url := "https://jsonplaceholder.typicode.com/todos/1" // Example API
+	url := "https://jsonplaceholder.typicode.com/todos/1"
+
+	// Check if context is done before making the request
+	select {
+	case <-ctx.Done():
+		log.Println("API request skipped due to stop signal.")
+		return
+	default:
+	}
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil) // Attach context to the request
 	if err != nil {
