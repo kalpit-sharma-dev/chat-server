@@ -1,0 +1,78 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"sync"
+	"time"
+)
+
+var (
+	stopLoop    = make(chan struct{}) // Channel to signal stopping the infinite loop
+	wg          sync.WaitGroup        // WaitGroup to track goroutines
+	running     bool                  // Flag to track infinite loop status
+	routineLock sync.Mutex            // Mutex to synchronize goroutine count
+)
+
+func startInfiniteLoop() {
+	log.Println("Starting infinite loop...")
+	running = true
+	for {
+		select {
+		case <-stopLoop:
+			log.Println("Stopping infinite loop...")
+			return
+		default:
+			// Simulate work
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+}
+
+func worker() {
+	defer wg.Done()
+
+	// Simulated error scenario
+	err := doWork()
+	if err != nil {
+		log.Printf("Worker error: %v\n", err)
+	}
+}
+
+func doWork() error {
+	// Simulate a task with a potential error
+	time.Sleep(2 * time.Second) // Simulate work
+	return fmt.Errorf("simulated error")
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("call")
+
+	if query == "true" {
+		routineLock.Lock()
+		wg.Add(1)
+		go worker()
+		routineLock.Unlock()
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "Started a new goroutine.")
+	} else if query == "false" {
+		close(stopLoop) // Stop infinite loop
+		wg.Wait()       // Wait for all goroutines to complete
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "All goroutines stopped.")
+	} else {
+		http.Error(w, "Invalid query parameter", http.StatusBadRequest)
+	}
+}
+
+func main() {
+	go startInfiniteLoop()
+
+	http.HandleFunc("/api", handler)
+
+	log.Println("Server started on :8080")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatalf("Server error: %v", err)
+	}
+}
