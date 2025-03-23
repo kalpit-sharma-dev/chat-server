@@ -1,0 +1,250 @@
+I'll analyze the Jupyter Notebook file (`error-classification.ipynb`) and explain each line of code. Let me first inspect its contents.
+
+Here's a detailed explanation of each section of the code in your Jupyter Notebook:
+
+---
+
+### **1. Install Required Dependencies**
+```python
+pip install -r requirements.txt
+```
+- This installs all required dependencies listed in the `requirements.txt` file.
+- Dependencies likely include `transformers`, `torch`, `pandas`, `scikit-learn`, `datasets`, `fastapi`, and `uvicorn`.
+
+---
+
+### **2. Import Required Libraries and Load Dataset**
+```python
+import pandas as pd
+import torch
+from sklearn.model_selection import train_test_split
+from transformers import BertTokenizer, RobertaTokenizer, DistilBertTokenizer
+from datasets import Dataset
+```
+- `pandas`: Used for handling tabular data.
+- `torch`: PyTorch framework for deep learning.
+- `train_test_split`: Splits data into training and validation sets.
+- `BertTokenizer`, `RobertaTokenizer`, `DistilBertTokenizer`: Tokenizers for different Transformer models.
+- `Dataset`: A Hugging Face dataset format.
+
+---
+
+### **3. Load and Preprocess Data**
+```python
+df = pd.read_csv("errors_dataset.csv", encoding="ISO-8859-1", dtype=str)
+df["label"] = df["Tech / Fail"].map({"Technical": 0, "Functional": 1})
+df["combined_text"] = df["ERROR_CODE"].astype(str) + " " + df["ERROR_MESSAGE_SHOWN_TO_THE_CUSTOMER"]
+```
+- Reads the `errors_dataset.csv` file.
+- Maps error categories: **"Technical" → 0, "Functional" → 1**.
+- Combines `ERROR_CODE` and `ERROR_MESSAGE_SHOWN_TO_THE_CUSTOMER` into one text field for model input.
+
+---
+
+### **4. Split Data into Train and Validation Sets**
+```python
+train_texts, val_texts, train_labels, val_labels = train_test_split(
+    df["combined_text"].tolist(), df["label"].tolist(), test_size=0.2, random_state=42
+)
+```
+- Splits the dataset into **80% training** and **20% validation**.
+
+---
+
+### **5. Load Tokenizers**
+```python
+tokenizers = {
+    "bert": BertTokenizer.from_pretrained("bert-large-uncased"),
+    "roberta": RobertaTokenizer.from_pretrained("roberta-large"),
+    "distilbert": DistilBertTokenizer.from_pretrained("distilbert-base-uncased"),
+}
+```
+- Loads pretrained tokenizers for BERT, RoBERTa, and DistilBERT.
+
+---
+
+### **6. Convert Texts and Labels to Strings**
+```python
+train_texts = [str(test) for test in train_texts]
+train_labels = [str(label) for label in train_labels]
+val_texts = [str(test) for test in val_texts]
+val_labels = [str(label) for label in val_labels]
+```
+- Ensures all text and labels are **string format** for processing.
+
+---
+
+### **7. Tokenization Function**
+```python
+def tokenize_function(examples, model_name):
+    return tokenizers[model_name](examples["combined_text"], padding="max_length", truncation=True)
+```
+- Tokenizes text using the corresponding tokenizer.
+- Applies **padding** and **truncation** to ensure uniform input length.
+
+---
+
+### **8. Convert to Hugging Face Dataset**
+```python
+def prepare_dataset(model_name):
+    return Dataset.from_dict({"combined_text": train_texts, "label": train_labels}).map(
+        lambda x: tokenize_function(x, model_name), batched=True
+    ), Dataset.from_dict({"combined_text": val_texts, "label": val_labels}).map(
+        lambda x: tokenize_function(x, model_name), batched=True
+    )
+```
+- Converts the data into **Hugging Face Dataset** format.
+- Uses `map()` to apply tokenization.
+
+---
+
+### **9. Prepare Training and Validation Datasets**
+```python
+train_datasets, val_datasets = {}, {}
+for model in tokenizers.keys():
+    train_datasets[model], val_datasets[model] = prepare_dataset(model)
+```
+- Prepares **training and validation datasets** for each model.
+
+---
+
+### **10. Load Pretrained Models**
+```python
+from transformers import BertForSequenceClassification, RobertaForSequenceClassification, DistilBertForSequenceClassification, Trainer, TrainingArguments
+```
+- Imports necessary Hugging Face `transformers` models and `Trainer`.
+
+```python
+models = {
+    "bert": BertForSequenceClassification.from_pretrained("bert-large-uncased", num_labels=2),
+    "roberta": RobertaForSequenceClassification.from_pretrained("roberta-large", num_labels=2),
+    "distilbert": DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=2),
+}
+```
+- Loads pretrained models for classification with **2 output labels** (Technical or Functional).
+
+---
+
+### **11. Training Arguments**
+```python
+training_args = TrainingArguments(
+    output_dir="./results",
+    evaluation_strategy="epoch",
+    save_strategy="epoch",
+    per_device_train_batch_size=8,
+    per_device_eval_batch_size=8,
+    num_train_epochs=5,
+    weight_decay=0.01,
+    logging_dir="./logs",
+    load_best_model_at_end=True
+)
+```
+- Defines **training configurations**:
+  - Trains for **5 epochs**.
+  - Saves and evaluates **after each epoch**.
+  - Uses **batch size of 8**.
+  - Applies **weight decay (L2 regularization)**.
+
+---
+
+### **12. Handle Label Conversion**
+```python
+def convert_label(label_data):
+    if "label" not in label_data or label_data["label"] is None:
+        label_data["label"] = 0
+    else:
+        try:
+            label_value = float(label_data["label"])
+            if math.isnan(label_value):
+                label_data["label"] = 0
+            else:
+                label_data["label"] = int(label_value)
+        except ValueError:
+            label_data["label"] = 0
+    return label_data
+```
+- Ensures that labels are properly formatted (no NaN or invalid values).
+
+---
+
+### **13. Train Each Model**
+```python
+for model_name, model in models.items():
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_datasets[model_name],
+        eval_dataset=val_datasets[model_name]
+    )
+    
+    trainer.train()
+    
+    model.save_pretrained(f"./{model_name}_classifier")
+    tokenizers[model_name].save_pretrained(f"./{model_name}_classifier")
+```
+- **Trains each model** using Hugging Face `Trainer`.
+- Saves the trained model and tokenizer.
+
+---
+
+### **14. Load Trained Models for Inference**
+```python
+models = {
+    "bert": BertForSequenceClassification.from_pretrained("./bert_classifier"),
+    "roberta": RobertaForSequenceClassification.from_pretrained("./roberta_classifier"),
+    "distilbert": DistilBertForSequenceClassification.from_pretrained("./distilbert_classifier"),
+}
+tokenizers = {
+    "bert": BertTokenizer.from_pretrained("./bert_classifier"),
+    "roberta": RobertaTokenizer.from_pretrained("./roberta_classifier"),
+    "distilbert": DistilBertTokenizer.from_pretrained("./distilbert_classifier"),
+}
+```
+- Loads the trained models and tokenizers from disk.
+
+---
+
+### **15. Classification Using an Ensemble Approach**
+```python
+def classify_error_ensemble(error_code, message):
+    combined_text = error_code + " " + message
+    predictions = []
+    
+    for model_name, model in models.items():
+        tokenizer = tokenizers[model_name]
+        inputs = tokenizer(combined_text, return_tensors="pt", padding=True, truncation=True)
+        
+        with torch.no_grad():
+            logits = model(**inputs).logits
+            probabilities = softmax(logits, dim=1)
+            pred_label = torch.argmax(logits).item()
+        
+        predictions.append(probabilities.numpy()[0])
+
+    avg_probs = torch.tensor(predictions).mean(dim=0)
+    final_pred = torch.argmax(avg_probs).item()
+
+    category = "Technical" if final_pred == 0 else "Functional"
+    return {"category": category, "probabilities": avg_probs.tolist()}
+```
+- **Ensembles predictions** from all models.
+- **Averages probabilities** and selects the most likely category.
+
+---
+
+### **16. Setting Up FastAPI Endpoint**
+```python
+class ErrorMessage(BaseModel):
+    error_code: str
+    message: str
+
+@app.post("/classify")
+async def classify_error_message(error: ErrorMessage):
+    result = classify_error_ensemble(error.error_code, error.message)
+    return result
+```
+- Defines a **FastAPI endpoint** for error classification.
+
+---
+
+This notebook implements an **error classification system** using **BERT, RoBERTa, and DistilBERT** with an **ensemble approach**. 🚀 Let me know if you need any modifications or explanations!
