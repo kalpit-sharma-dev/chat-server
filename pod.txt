@@ -1,0 +1,59 @@
+package main
+
+import (
+    "context"
+    "fmt"
+    "net"
+    "time"
+
+    "google.golang.org/grpc"
+)
+
+const (
+    serviceName = "secret-cache-service.default.svc.cluster.local"
+    grpcPort    = "50051"
+)
+
+// discoverPods resolves the DNS name to fetch IPs of pods
+func discoverPods(serviceName string) ([]string, error) {
+    ips, err := net.LookupHost(serviceName)
+    if err != nil {
+        return nil, fmt.Errorf("failed to resolve DNS: %w", err)
+    }
+    return ips, nil
+}
+
+// connectToPods connects to all discovered pods and sends updates
+func connectToPods(podIPs []string) {
+    for _, ip := range podIPs {
+        go func(ip string) {
+            address := fmt.Sprintf("%s:%s", ip, grpcPort)
+            conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+            if err != nil {
+                fmt.Printf("Failed to connect to pod %s: %v\n", ip, err)
+                return
+            }
+            defer conn.Close()
+            fmt.Printf("Connected to pod %s\n", ip)
+            // Call gRPC methods here if needed
+        }(ip)
+    }
+}
+
+func main() {
+    for {
+        fmt.Println("Discovering pods...")
+        podIPs, err := discoverPods(serviceName)
+        if err != nil {
+            fmt.Printf("Error discovering pods: %v\n", err)
+            time.Sleep(10 * time.Second)
+            continue
+        }
+
+        fmt.Printf("Discovered pods: %v\n", podIPs)
+        connectToPods(podIPs)
+
+        // Poll periodically to handle scaling or DNS updates
+        time.Sleep(30 * time.Second)
+    }
+}
