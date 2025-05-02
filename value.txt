@@ -1,0 +1,173 @@
+To use **Kubernetes DNS** for dynamically discovering pod addresses, you can leverage the DNS-based service discovery feature of Kubernetes. Here's how to implement this in Golang:
+
+---
+
+### **Steps to Implement Service Discovery Using Kubernetes DNS**
+
+1. **Set Up a Kubernetes Service**:
+
+   * Ensure your service is exposed in Kubernetes using a `ClusterIP` or `Headless` service.
+   * A `Headless` service will directly resolve to the IPs of individual pods, enabling pod-level communication.
+
+   Example `headless-service.yaml`:
+
+   ```yaml
+   apiVersion: v1
+   kind: Service
+   metadata:
+     name: secret-cache-service
+     namespace: default
+   spec:
+     clusterIP: None
+     selector:
+       app: secret-cache
+     ports:
+       - port: 50051
+         targetPort: 50051
+   ```
+
+2. **Deploy Pods with Labels**:
+   Ensure the pods have a matching label `app: secret-cache` for the above service.
+
+   Example `deployment.yaml`:
+
+   ```yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: secret-cache
+   spec:
+     replicas: 3
+     selector:
+       matchLabels:
+         app: secret-cache
+     template:
+       metadata:
+         labels:
+           app: secret-cache
+       spec:
+         containers:
+           - name: secret-cache
+             image: your-docker-image
+             ports:
+               - containerPort: 50051
+   ```
+
+3. **Leverage Kubernetes DNS for Service Discovery**:
+
+   * The DNS name of your `Headless` service will resolve to the individual pod IPs.
+   * Example DNS name: `secret-cache-service.default.svc.cluster.local`.
+
+---
+
+### **Golang Implementation**
+
+In your Golang application, use Kubernetes DNS to resolve the pod addresses dynamically.
+
+1. **Install Required Libraries**:
+   Install the Go resolver library for DNS lookups.
+
+   ```bash
+   go get github.com/miekg/dns
+   ```
+
+2. **Code for Resolving Pod Addresses**:
+   Use the DNS name of the `Headless` service to retrieve pod IPs.
+
+   ```go
+   package main
+
+   import (
+       "context"
+       "fmt"
+       "net"
+       "time"
+
+       "google.golang.org/grpc"
+   )
+
+   const (
+       serviceName = "secret-cache-service.default.svc.cluster.local"
+       grpcPort    = "50051"
+   )
+
+   // discoverPods resolves the DNS name to fetch IPs of pods
+   func discoverPods(serviceName string) ([]string, error) {
+       ips, err := net.LookupHost(serviceName)
+       if err != nil {
+           return nil, fmt.Errorf("failed to resolve DNS: %w", err)
+       }
+       return ips, nil
+   }
+
+   // connectToPods connects to all discovered pods and sends updates
+   func connectToPods(podIPs []string) {
+       for _, ip := range podIPs {
+           go func(ip string) {
+               address := fmt.Sprintf("%s:%s", ip, grpcPort)
+               conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+               if err != nil {
+                   fmt.Printf("Failed to connect to pod %s: %v\n", ip, err)
+                   return
+               }
+               defer conn.Close()
+               fmt.Printf("Connected to pod %s\n", ip)
+               // Call gRPC methods here if needed
+           }(ip)
+       }
+   }
+
+   func main() {
+       for {
+           fmt.Println("Discovering pods...")
+           podIPs, err := discoverPods(serviceName)
+           if err != nil {
+               fmt.Printf("Error discovering pods: %v\n", err)
+               time.Sleep(10 * time.Second)
+               continue
+           }
+
+           fmt.Printf("Discovered pods: %v\n", podIPs)
+           connectToPods(podIPs)
+
+           // Poll periodically to handle scaling or DNS updates
+           time.Sleep(30 * time.Second)
+       }
+   }
+   ```
+
+3. **gRPC Communication**:
+
+   * When a Pub/Sub message arrives, send updates to all connected pods.
+   * You can reuse the discovered pod IPs for making gRPC calls dynamically.
+
+---
+
+### **Benefits of Kubernetes DNS for Service Discovery**
+
+* Pods are automatically discovered via the `Headless` service.
+* No need to hardcode IPs or maintain a centralized registry.
+* Automatically handles pod scaling (new pods are discovered in subsequent DNS lookups).
+
+---
+
+### **Optional Enhancements**
+
+1. **Caching DNS Results**:
+
+   * Add a caching layer to reduce DNS queries.
+   * Use a library like `go-cache`.
+
+2. **Health Checks**:
+
+   * Before connecting to a pod, implement health checks using gRPC.
+
+3. **Error Handling**:
+
+   * Handle cases where DNS lookups fail or pods are not reachable.
+
+4. **Load Balancing**:
+
+   * Use a load balancer or Kubernetes service without `clusterIP: None` if you want balanced requests instead of individual pod resolution.
+
+By using Kubernetes DNS, you can create a dynamic and robust mechanism for pod discovery and cache updates across all instances of your service.
