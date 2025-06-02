@@ -1,3 +1,7 @@
+I am creating a agentic ai mobile app for retail banking.
+I want to create a same UI as that of chatgpt for my app in react native 
+
+
 When you enter a prompt and hit send:
 
 A POST request is made to the backend using fetch.
