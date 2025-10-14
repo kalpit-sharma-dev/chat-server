@@ -1,0 +1,43 @@
+Done — I created a ready-to-run React dashboard component for account-statement analysis in a canvas file named **Account-statement-dashboard**.
+
+What I added (high level)
+
+* File: `account-statement-dashboard.jsx` (single-file React component).
+* Features: file upload (CSV/XLSX/JSON), parsing (PapaParse + xlsx), summary cards (credits, debits, net, balance), charts (monthly net flow, spending by category, top merchants) using **recharts**, searchable / filterable table, export filtered CSV, and a sample dataset button.
+* A basic category-mapper (keyword-based) — you can extend it with your own merchant/category mapping rules.
+
+How to use it
+
+1. Create a React project (Vite or CRA) if you don't have one:
+
+   * Vite: `npm create vite@latest my-dashboard -- --template react`
+   * CRA: `npx create-react-app my-dashboard`
+2. Install dependencies:
+
+   ```
+   npm install papaparse xlsx file-saver recharts
+   ```
+3. (Optional) Install and configure Tailwind CSS for the exact styling in the component. The component uses Tailwind utility classes — it will still work visually without Tailwind.
+4. Drop the `account-statement-dashboard.jsx` file into `src/` and import it from `App.jsx`:
+
+   ```jsx
+   import AccountStatementDashboard from './account-statement-dashboard';
+   export default function App(){ return <AccountStatementDashboard/> }
+   ```
+5. `npm run dev` or `npm start`.
+
+Notes & next steps you might want
+
+* PDF bank statement parsing (banks often provide PDF): you’ll need server-side PDF parsing (pdfplumber or tika) or client-side OCR; I can add a server component that extracts tables from PDFs if you want.
+* Enrich categories: replace the simple keyword mapper with an ML classifier, or upload a merchant→category CSV to map precisely.
+* Time-series balance reconstruction: if your statements don't include running balance, reconstructing balance needs an opening balance — we can add heuristics.
+* Authentication & storage: add backend (Node/Go) to store parsed statements and user dashboards.
+* More charts: Add cohort spend, bucketed spending over time, subscription detection, anomaly detection, rule-based alerts, and RFM segmentation.
+
+If you'd like, I can:
+
+* Add PDF parsing backend (Node/Python) and wire it to this UI.
+* Convert the component into a multi-file production-ready page with better UX (pagination, column sort, downloads).
+* Add example unit tests or storybook stories.
+
+Which would you like next?
