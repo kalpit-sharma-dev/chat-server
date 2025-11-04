@@ -1,0 +1,117 @@
+Absolutely 👍 — here’s the complete set of commands to:
+1️⃣ Pull the Google Cloud SDK emulator image,
+2️⃣ Run it in Docker,
+3️⃣ Connect your macOS gcloud CLI and Go/other apps to it.
+
+
+---
+
+🧩 Full Setup for Google Cloud Pub/Sub Emulator in Docker (macOS)
+
+🧱 Step 1. Download (pull) the official image
+
+docker pull gcr.io/google.com/cloudsdktool/cloud-sdk:emulators
+
+This image includes the Pub/Sub emulator, Datastore emulator, etc.
+
+
+---
+
+🚀 Step 2. Run the Pub/Sub emulator container
+
+Run it in detached mode and expose port 8085:
+
+docker run -d --name pubsub-emulator -p 8085:8085 gcr.io/google.com/cloudsdktool/cloud-sdk:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
+
+✅ This command:
+
+Names the container pubsub-emulator
+
+Exposes emulator on your Mac at localhost:8085
+
+Starts Pub/Sub emulator inside the container
+
+
+You can confirm it’s running:
+
+docker ps
+
+
+---
+
+⚙️ Step 3. Set environment variables on macOS
+
+Now tell your local tools (gcloud, SDKs, apps) to connect to the emulator instead of GCP:
+
+export PUBSUB_EMULATOR_HOST=localhost:8085
+export CLOUDSDK_CORE_PROJECT=local-project
+
+To make them permanent:
+
+echo 'export PUBSUB_EMULATOR_HOST=localhost:8085' >> ~/.zshrc
+echo 'export CLOUDSDK_CORE_PROJECT=local-project' >> ~/.zshrc
+source ~/.zshrc
+
+
+---
+
+🧩 Step 4. Test connection from gcloud
+
+Run:
+
+gcloud pubsub topics list
+
+Expected output (first time):
+
+Listed 0 items.
+
+Then try:
+
+gcloud pubsub topics create test-topic
+gcloud pubsub topics list
+
+You should see:
+
+NAME
+projects/local-project/topics/test-topic
+
+
+---
+
+🧰 Step 5. Connect your Go / Node / Python app
+
+Before running your local app that uses Pub/Sub SDKs:
+
+export PUBSUB_EMULATOR_HOST=localhost:8085
+
+Then run:
+
+go run main.go
+
+or
+
+npm start
+
+or
+
+python main.py
+
+All SDK calls will now go to the emulator instead of GCP.
+
+
+---
+
+🧹 (Optional) Stop or remove emulator
+
+Stop:
+
+docker stop pubsub-emulator
+
+Remove:
+
+docker rm pubsub-emulator
+
+
+---
+
+Would you like me to give you a docker-compose.yml version too — so you can start/stop the Pub/Sub emulator easily with one command (docker compose up)?
