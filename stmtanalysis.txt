@@ -1,0 +1,314 @@
+# Universal Financial Statement Analysis System
+
+## 1. **Objective**
+
+Design an end-to-end solution that can automatically parse, normalize, analyze, and generate insights from **any type of financial statement**, including:
+
+* Bank account statements
+* Credit card statements
+* Demat (holding + transaction) statements
+* Loan statements
+* Wallet statements (Paytm, PhonePe, etc.)
+
+The system should support **PDF, Excel, CSV, Image (OCR)** formats and follow a unified analysis flow.
+
+---
+
+## 2. **High-Level Architecture (Flow Diagram Description)**
+
+### **Step 1: Input Upload Layer**
+
+* User uploads file(s)
+* Supported formats: PDF, Image, Excel, CSV
+* Multi-page, password-protected PDFs supported
+
+### **Step 2: Pre-processing Layer**
+
+1. **File Type Detection**
+2. **Password Unlock (If required)**
+3. **OCR Extraction** (Tesseract / AWS Textract / Google Vision)
+4. **Text Structuring**
+
+   * Header extraction
+   * Table detection
+   * Line-item identification
+
+### **Step 3: Statement Classifier**
+
+ML/Rule-based classifier identifies:
+
+* Bank Statement
+* Credit Card Statement
+* Demat Holding
+* Demat Trades
+* Loan EMI Statement
+* Wallet Statement
+
+### **Step 4: Template Mapping & Normalization**
+
+Each statement type has different formats. So create:
+
+* **Document Templates**
+* **Field Extractor Rules**
+* **Column Mapper** → Convert to **Universal Schema**
+
+Example universal schema for transactions:
+
+* date
+* description
+* category
+* debit
+* credit
+* balance
+* source (HDFC, SBI, Upstox, Zerodha, etc.)
+* confidence score
+
+### **Step 5: Data Cleaning Layer**
+
+* Detect duplicates
+* Normalize dates (dd-mm-yyyy → yyyy-mm-dd)
+* Standardize amounts
+* Description cleanup
+* Category suggestions using ML
+
+### **Step 6: Analysis Engine**
+
+#### **Bank & Credit Card**
+
+* Expense Categorization
+* Income Classification
+* Recurring Payments Detection
+* Cash Flow Health Score
+* Credit Utilization
+* EMI Tracker
+* Suspicious Transactions
+
+#### **Demat**
+
+* Portfolio Allocation
+* Unrealized P/L
+* Realized P/L
+* Trade Patterns
+* SIP & Lump Sum summary
+* XIRR returns
+
+### **Step 7: Insights & Reporting Layer**
+
+* Summary Dashboard
+* Monthly Summary Report
+* Investment Report
+* Cashflow Trends
+* Alerts & Flags
+
+### **Step 8: Output Layer**
+
+* JSON Output
+* Summary PDF
+* Graphs (Bar/Pie/Line)
+* API output for app integration
+
+---
+
+## 3. **Universal Schema Design**
+
+### **A. Transaction Schema**
+
+```
+transaction_id
+source
+statement_type
+transaction_date
+description
+category
+sub_category
+debit_amount
+credit_amount
+balance
+metadata
+confidence
+```
+
+### **B. Portfolio Schema**
+
+```
+scrip_name
+type
+txn_date
+quantity
+avg_price
+current_price
+realized_pl
+unrealized_pl
+broker
+```
+
+### **C. Credit Card Schema**
+
+```
+billing_cycle_start
+billing_cycle_end
+due_date
+total_due
+minimum_due
+interest_charges
+available_credit
+```
+
+---
+
+## 4. **Rules for Statement Analysis**
+
+### **1. Date Rules**
+
+* Identify all possible patterns
+* Extract nearest valid date
+* Validate year logic (e.g., 2030 unlikely)
+
+### **2. Amount Rules**
+
+* Debit/Credit inference based on keywords
+* Negative amounts normalized
+* Currency detection
+
+### **3. Category Rules**
+
+* ML + Rule-based hybrid
+* Example rules:
+
+  * "UPI", "Paytm", "GPay" → Digital Payments
+  * "Amazon" → Shopping
+  * "NACH", "SI" → Auto Debit
+  * "ATM" → Cash Withdrawal
+
+### **4. Duplicate Detection Rules**
+
+* Same date + same amount + same description = probable duplicate
+* Fuzzy matching for descriptions
+
+### **5. Fraud/Suspicion Rules**
+
+* Multiple high-value transactions in short time window
+* Transactions at odd hours
+* Sudden cash withdrawals
+* Abnormal credit utilization (>80%)
+
+---
+
+## 5. **Health Parameters**
+
+### **A. Banking Health Score**
+
+* Savings Rate
+* Expense Breakdown
+* Recurring Expense Ratio
+* Minimum Balance Compliance
+* Liquidity Score
+
+### **B. Credit Card Health Score**
+
+* Credit Utilization
+* Late Fee Count
+* Minimum Payment Habit
+* High-risk Merchant Spends
+* Cash Advance frequency
+
+### **C. Investment Health Score**
+
+* Portfolio Diversification
+* Equity/Debt Ratio
+* Concentration Risk
+* Profit/Loss Trend
+* XIRR Return
+
+---
+
+## 6. **End-to-End System Components**
+
+### **Frontend**
+
+* Upload interface
+* Progress status
+* Dashboard visualizations
+
+### **Backend (API)**
+
+* Upload service
+* Parsing service
+* ML classifier
+* Template engine
+* Analysis engine
+* Reporting service
+
+### **Database**
+
+* Raw File Storage (GCS/AWS S3)
+* Extracted Data Tables
+* Analytics Tables
+* Audit logs
+
+### **ML Models Required**
+
+1. Document Type Classifier
+2. Table Extractor
+3. Category Classifier
+4. Anomaly Detection Model
+
+---
+
+## 7. **Tech Stack Recommendation**
+
+### **Backend**
+
+* Golang (you prefer it)
+* Python (for ML models)
+
+### **ML/OCR**
+
+* Tesseract
+* AWS Textract / GCP Vision
+* spaCy / BERT for classification
+
+### **Database**
+
+* PostgreSQL
+* BigQuery (if scale > 100M rows)
+
+### **Frontend**
+
+* React / Next.js
+* Expo React Native for mobile
+
+### **Cloud**
+
+* GCP preferred
+* Cloud Run for API
+* Pub/Sub for event-driven pipelines
+
+---
+
+## 8. **KPIs (Key Performance Indicators)**
+
+* Extraction Accuracy
+* Template Coverage
+* Parsing Time
+* Category Accuracy
+* Duplicate Detection Accuracy
+* Fraud Alert Precision
+
+---
+
+## 9. **Future Enhancements**
+
+* Income Tax-ready reports
+* GST reconciliation
+* Multi-language OCR
+* Automated tagging with AI
+* Predictive cashflow analysis
+
+---
+
+## 10. **Conclusion**
+
+This design supports a **universal, scalable, multi-statement financial analysis system** suitable for personal finance apps, fintech, lending systems, and wealth management platforms.
+
+You can expand this document with diagrams, database schema drawings, or API specifications as needed.
