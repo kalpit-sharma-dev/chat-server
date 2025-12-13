@@ -251,3 +251,87 @@ Add NLP fallback (spaCy)
 
 
 Just say the word 🚀
+
+
+
+
+
+func looksLikeName(s string) bool {
+	s = strings.TrimSpace(s)
+
+	if len(s) < 4 {
+		return false
+	}
+
+	// reject codes
+	if regexp.MustCompile(`\d{4,}`).MatchString(s) {
+		return false
+	}
+
+	// reject bank codes
+	bad := []string{"HDFC", "UTIB", "AXIS", "XXXX", "TPT", "IMPS", "NEFT"}
+	for _, b := range bad {
+		if strings.Contains(s, b) {
+			return false
+		}
+	}
+
+	// allow words
+	return regexp.MustCompile(`^[A-Z ]+$`).MatchString(s)
+}
+
+
+
+
+
+
+
+func extractFromCBS(n string) string {
+	parts := strings.Split(n, "-")
+
+	// scan from right → left
+	for i := len(parts) - 1; i >= 0; i-- {
+		p := strings.TrimSpace(parts[i])
+
+		if looksLikeName(p) {
+			return p
+		}
+	}
+
+	return ""
+}
+
+
+
+
+
+func ExtractBeneficiary(narration string) string {
+	n := NormalizeNarration(narration)
+
+	// UPI
+	if m := upiRegex.FindStringSubmatch(n); len(m) > 1 {
+		return strings.TrimSpace(m[1])
+	}
+
+	// IMPS
+	if m := impsRegex.FindStringSubmatch(n); len(m) > 1 {
+		return strings.TrimSpace(m[1])
+	}
+
+	// POS
+	if m := posRegex.FindStringSubmatch(n); len(m) > 1 {
+		return strings.TrimSpace(m[1])
+	}
+
+	// CBS / NEFT / TPT / FD / P2A
+	if name := extractFromCBS(n); name != "" {
+		return name
+	}
+
+	// Salary fallback
+	if strings.Contains(n, "SALARY") {
+		return "EMPLOYER"
+	}
+
+	return "UNKNOWN"
+}
