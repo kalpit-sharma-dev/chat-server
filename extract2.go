@@ -335,3 +335,92 @@ func ExtractBeneficiary(narration string) string {
 
 	return "UNKNOWN"
 }
+,..................
+
+
+
+
+
+type ExpenseCategory struct {
+	Category    string
+	SubCategory string
+	Confidence  float64
+}
+
+var expenseRules = map[string][]string{
+	"TRAVEL": {
+		"IRCTC", "UBER", "OLA", "MAKEMYTRIP",
+		"GOIBIBO", "INDIGO", "VISTARA",
+	},
+	"SHOPPING": {
+		"AMAZON", "FLIPKART", "MYNTRA",
+		"AJIO", "TATA CLIQ",
+	},
+	"GROCERIES": {
+		"ZEPTO", "BLINKIT", "BIGBASKET",
+		"DMART", "GROCERY", "DAIRY",
+	},
+	"FOOD_DELIVERY": {
+		"SWIGGY", "ZOMATO", "EATS",
+	},
+	"DINING": {
+		"RESTAURANT", "CAFE", "HOTEL",
+		"BAR", "DHABA",
+	},
+	"UTILITIES": {
+		"ELECTRICITY", "WATER", "GAS",
+		"BROADBAND", "MOBILE", "RECHARGE",
+	},
+	"BILLS": {
+		"INSURANCE", "PREMIUM", "EMI",
+		"LOAN", "CREDIT CARD",
+	},
+	"INVESTMENT": {
+		"FD", "MUTUAL", "SIP", "ZERODHA",
+		"GROWW", "UPSTOX",
+	},
+	"TRANSFER": {
+		"IMPS", "NEFT", "UPI", "TPT",
+	},
+}
+
+
+
+func DetectExpenseCategory(narration string, beneficiary string) ExpenseCategory {
+
+	text := strings.ToUpper(narration + " " + beneficiary)
+
+	bestMatch := ExpenseCategory{
+		Category:   "OTHER",
+		Confidence: 0.3,
+	}
+
+	for category, keywords := range expenseRules {
+		matchCount := 0
+
+		for _, k := range keywords {
+			if strings.Contains(text, k) {
+				matchCount++
+			}
+		}
+
+		if matchCount > 0 {
+			conf := 0.6 + float64(matchCount)*0.1
+			if conf > bestMatch.Confidence {
+				bestMatch = ExpenseCategory{
+					Category:   category,
+					Confidence: min(conf, 0.95),
+				}
+			}
+		}
+	}
+
+	return bestMatch
+}
+
+func min(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
+}
