@@ -1,0 +1,104 @@
+I'll help you create a comprehensive prompt for developing a Yugabyte common package for Golang. Here's a detailed prompt:
+
+---
+
+**Project Prompt: Unified Yugabyte Common Package for Golang**
+
+**Objective:**
+Create a comprehensive, production-ready Golang package that provides a unified interface for working with YugabyteDB, supporting both PostgreSQL (YSQL) and Cassandra (YCQL) APIs through the YugabyteDB Smart Driver.
+
+**Core Requirements:**
+
+1. **Smart Driver Integration:**
+   - Integrate YugabyteDB Smart Driver for Golang to leverage topology-aware connection management
+   - Implement automatic load balancing across YugabyteDB nodes
+   - Support cluster-aware routing and failover capabilities
+   - Enable connection pooling optimized for distributed databases
+
+2. **Dual API Support:**
+   - **YSQL (PostgreSQL-compatible)**: Full support for SQL operations, transactions, and PostgreSQL features
+   - **YCQL (Cassandra-compatible)**: Complete CQL support with prepared statements and batch operations
+   - Provide a unified interface that abstracts the underlying API differences
+
+3. **Package Structure:**
+   ```
+   yugabyte-common/
+   ├── client/          # Main client interface
+   ├── ysql/            # PostgreSQL-specific implementations
+   ├── ycql/            # Cassandra-specific implementations
+   ├── config/          # Configuration management
+   ├── connection/      # Connection pool management
+   ├── query/           # Query builders and executors
+   ├── migration/       # Schema migration tools
+   ├── health/          # Health checks and monitoring
+   └── examples/        # Usage examples
+   ```
+
+4. **Key Features:**
+   - Unified configuration management for both APIs
+   - Connection pool management with configurable parameters
+   - Automatic retry logic with exponential backoff
+   - Query builders for common operations
+   - Transaction support (where applicable)
+   - Prepared statement caching
+   - Context-aware operations with timeout support
+   - Metrics and observability (Prometheus-compatible)
+   - Graceful shutdown and connection cleanup
+   - Error handling with YugabyteDB-specific error types
+
+5. **API Design:**
+   - Simple, idiomatic Go interface
+   - Support for both synchronous and asynchronous operations
+   - Fluent API for query building
+   - Type-safe query parameters
+   - Struct mapping for results (similar to GORM/sqlx)
+
+6. **Configuration Options:**
+   - Connection strings for both YSQL and YCQL
+   - Load balancing policies (round-robin, topology-aware)
+   - Retry policies and timeout configurations
+   - SSL/TLS support
+   - Authentication credentials management
+   - Connection pool sizing and limits
+
+7. **Additional Functionality:**
+   - Schema migration tools compatible with both APIs
+   - Bulk insert/update operations
+   - Streaming query results for large datasets
+   - Health check endpoints
+   - Connection status monitoring
+   - Logging with configurable levels
+
+**Technical Specifications:**
+
+- **Go Version**: 1.21+
+- **Dependencies**: 
+  - YugabyteDB Smart Driver for Go
+  - Standard library packages (context, database/sql, etc.)
+  - Minimal external dependencies
+- **Testing**: Comprehensive unit and integration tests with mock support
+- **Documentation**: Full GoDoc documentation with examples
+- **Performance**: Optimized for high-throughput, low-latency operations
+
+**Deliverables:**
+
+1. Complete package source code with clean architecture
+2. Comprehensive documentation (README, API docs, examples)
+3. Unit tests with >80% code coverage
+4. Integration tests for both YSQL and YCQL
+5. Example applications demonstrating common use cases
+6. Migration guide for users coming from standard PostgreSQL or Cassandra drivers
+7. Performance benchmarking suite
+
+**Success Criteria:**
+
+- Package successfully connects to YugabyteDB using both YSQL and YCQL
+- Smart driver features (load balancing, topology awareness) work correctly
+- Clean, intuitive API that feels natural to Go developers
+- Production-ready with proper error handling and resource management
+- Well-documented with clear examples
+- Passes all tests including edge cases and failure scenarios
+
+---
+
+Would you like me to expand on any particular section or add additional requirements to this prompt?
