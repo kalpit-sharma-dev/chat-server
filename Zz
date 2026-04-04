@@ -1,0 +1,7 @@
+CONFIGURED_PATH=$(git config core.hooksPath)
+
+if [ "$CONFIGURED_PATH" != ".githooks" ]; then
+  echo "❌ Git hooks not configured!"
+  echo "👉 Run: make setup"
+  exit 1
+fi
