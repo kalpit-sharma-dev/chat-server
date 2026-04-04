@@ -1,0 +1,33 @@
+#!/bin/sh
+
+echo "🚀 Running pre-push checks..."
+
+# Run tests
+echo "👉 Running tests..."
+go test ./... -coverprofile=coverage.out
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed"
+  exit 1
+fi
+
+# Coverage check (example: 85%)
+COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+
+echo "👉 Coverage: $COVERAGE%"
+
+THRESHOLD=85
+
+if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+  echo "❌ Coverage below $THRESHOLD%"
+  exit 1
+fi
+
+# Build
+echo "👉 Building project..."
+go build ./...
+if [ $? -ne 0 ]; then
+  echo "❌ Build failed"
+  exit 1
+fi
+
+echo "✅ Pre-push checks passed"
