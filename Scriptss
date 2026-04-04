@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo "🔧 Setting up project..."
+
+# Configure hooks
+git config core.hooksPath .githooks
+chmod +x .githooks/*
+
+echo "✅ Git hooks configured!"
+
+# Optional: install pre-commit (if you use it)
+if command -v pre-commit >/dev/null 2>&1; then
+  pre-commit install
+fi
